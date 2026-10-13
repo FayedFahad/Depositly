@@ -1,0 +1,28 @@
+plugins { id 'com.android.application' version '8.9.2' }
+android {
+    namespace 'app.depositly.mobile'
+    compileSdk 34
+    buildToolsVersion '35.0.0'
+    defaultConfig {
+        applicationId 'app.depositly.mobile'
+        minSdk 26
+        targetSdk 34
+        versionCode providers.gradleProperty('depositlyVersionCode').get().toInteger()
+        versionName providers.gradleProperty('depositlyVersionName').get()
+    }
+    sourceSets.main {
+        manifest.srcFile '../app/AndroidManifest.xml'
+        java.srcDirs = ['src']
+        java.exclude 'test/**'
+        assets.srcDirs = ['../app/assets']
+        res.srcDirs = ['../app/res']
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8 }
+    buildTypes.release { minifyEnabled false }
+}
+dependencies {
+    implementation 'com.google.android.gms:play-services-auth:22.0.0'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
+}
+dependencyLocking { lockAllConfigurations() }

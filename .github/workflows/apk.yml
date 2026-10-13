@@ -31,7 +31,9 @@ jobs:
         run: ./scripts/bootstrap.ps1 -InstallSdk
       - name: Test
         shell: pwsh
-        run: ./scripts/test.ps1
+        run: |
+          ./scripts/test.ps1
+          ./scripts/gradle.ps1 -Tasks @('testReleaseUnitTest')
       - name: Build unsigned APK for pull requests
         if: github.event_name == 'pull_request'
         shell: pwsh

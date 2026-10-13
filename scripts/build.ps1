@@ -10,36 +10,12 @@ if ($VersionCodeOverride) {
 }
 $buildRoot = Join-Path $ProjectRoot 'build'
 $releaseRoot = Join-Path $ProjectRoot 'dist'
-New-Item -ItemType Directory -Force -Path $buildRoot, "$buildRoot/framework", $releaseRoot | Out-Null
-$stage = Join-Path $buildRoot ('app-' + (Get-Date -Format 'yyyyMMdd-HHmmssfff'))
-New-Item -ItemType Directory -Force -Path $stage | Out-Null
-foreach ($entry in @('assets','res','AndroidManifest.xml','apktool.yml')) {
-    Copy-Item -LiteralPath (Join-Path $ProjectRoot "app/$entry") -Destination $stage -Recurse
-}
-# Reminder bytecode is compiled from native/src, rather than checked-in generated smali.
-$smaliRoot = Join-Path $ProjectRoot 'app/smali'
-foreach ($source in (Get-ChildItem -LiteralPath $smaliRoot -Filter '*.smali' -Recurse -File)) {
-    $relative = $source.FullName.Substring($smaliRoot.Length + 1)
-    if ($relative.Replace('\','/') -like 'app/depositly/mobile/reminders/*') { continue }
-    $destination = Join-Path $stage "smali/$relative"
-    New-Item -ItemType Directory -Force -Path (Split-Path $destination -Parent) | Out-Null
-    Copy-Item -LiteralPath $source.FullName -Destination $destination
-}
-$configPath = Join-Path $stage 'apktool.yml'
-$config = Get-Content $configPath -Raw
-$config = [regex]::Replace($config,'(?m)(versionCode:\s*)\d+',('${1}' + $version.Code))
-[IO.File]::WriteAllText($configPath,$config,[Text.UTF8Encoding]::new($false))
-$nativeDex = & (Join-Path $PSScriptRoot 'build-native.ps1') -SdkPath $sdkRoot
-$unsignedPath = Join-Path $buildRoot 'Depositly-unsigned.apk'
+New-Item -ItemType Directory -Force -Path $buildRoot, $releaseRoot | Out-Null
+$env:DEPOSITLY_BUILD_CODE = [string]$version.Code
+& (Join-Path $PSScriptRoot 'gradle.ps1') -SdkPath $sdkRoot -Tasks @('assembleRelease')
+$unsignedPath = Join-Path $ProjectRoot 'native/build/outputs/apk/release/Depositly-release-unsigned.apk'
+if (!(Test-Path $unsignedPath)) { throw 'Gradle did not produce the unsigned release APK.' }
 $alignedPath = Join-Path $buildRoot 'Depositly-aligned.apk'
-& java -jar (Join-Path $ProjectRoot 'tools/apktool.jar') b -f $stage --aapt "$buildTools/aapt2.exe" -p "$buildRoot/framework" -o $unsignedPath | Out-Host
-Assert-ToolExit
-Add-Type -AssemblyName System.IO.Compression.FileSystem
-$archive = [IO.Compression.ZipFile]::Open($unsignedPath,[IO.Compression.ZipArchiveMode]::Update)
-try {
-    if ($archive.GetEntry('classes2.dex')) { throw 'Unexpected duplicate helper DEX.' }
-    [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive,$nativeDex,'classes2.dex') | Out-Null
-} finally { $archive.Dispose() }
 & "$buildTools/zipalign.exe" -f 4 $unsignedPath $alignedPath | Out-Host
 Assert-ToolExit
 $suffix = if ($Unsigned) { '-unsigned' } else { '' }

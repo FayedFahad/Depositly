@@ -5,11 +5,15 @@ $commit = $env:GITHUB_SHA
 if (!$repo -or !$commit) { throw 'Publishing requires the GitHub Actions repository and commit context.' }
 $notes = Join-Path $ProjectRoot 'build/release-notes.md'
 $info = Get-Content (Join-Path $ProjectRoot 'dist/build-info.json') -Raw | ConvertFrom-Json
+$changesPath = Join-Path $ProjectRoot 'docs/release-notes.md'
+$changes = if (Test-Path $changesPath) { Get-Content $changesPath -Raw } else { '' }
 @"
 Signed APK built automatically from main.
 
 Version: $($version.Name), Android version code: $($info.versionCode).
 Source commit: $commit.
+
+$changes
 
 Install the APK over your existing Depositly app to retain entries. This release is refreshed after each successful main-branch app update.
 "@ | Set-Content -LiteralPath $notes -Encoding UTF8

@@ -1,6 +1,6 @@
 . (Join-Path $PSScriptRoot 'common.ps1')
 & (Join-Path $ProjectRoot 'tests/ci-version.test.ps1')
-foreach ($test in @('dates.test.cjs','reminders.test.cjs','renewal.test.cjs')) {
+foreach ($test in @('dates.test.cjs','reminders.test.cjs','renewal.test.cjs','cloud.test.cjs')) {
     & node (Join-Path $ProjectRoot "tests/$test") | Out-Host
     Assert-ToolExit
 }

@@ -16,4 +16,8 @@
 password.txt
 .DS_Store
 Thumbs.db
+/native/.gradle/
+/native/build/
+/native/local.properties
+/tools/gradle-*/
 
