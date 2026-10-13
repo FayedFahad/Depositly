@@ -72,6 +72,8 @@ body[data-page="Settings"] main>.settings-backup{animation:depositly-reveal .44s
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 
 .cloud-content{padding:0 20px 20px}.cloud-content button{min-height:48px}.cloud-content .setting-switch{min-width:52px;min-height:48px}.cloud-content .sub,.cloud-privacy{font-size:13px;line-height:1.6;overflow-wrap:anywhere}.cloud-content .cloud-status{font-size:13px;line-height:1.6;color:var(--text);background:var(--soft);border-radius:12px;padding:12px;overflow-wrap:anywhere}.cloud-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.cloud-actions button{min-height:48px;flex:1 1 160px;display:inline-flex;align-items:center;justify-content:center;gap:8px}.cloud-actions svg{width:20px;height:20px}.cloud-automatic{padding:16px 0}.cloud-privacy{color:var(--muted);margin:16px 0 0}.cloud-content button:active{opacity:.8}.cloud-content button:focus-visible{outline:3px solid var(--brand);outline-offset:3px}#cloudBackup .setting-copy{overflow-wrap:anywhere}#cloudBackup[aria-busy="true"] .cloud-status{border-left:3px solid var(--brand)}
+/* Keep the app header visible while preserving its space in the page layout. */
+body>header{position:sticky;top:0;z-index:10}
 </style></head><body>
 <header><div class="logo" id="logo"></div><div><h1>Depositly</h1><div class="sub">Personal investment tracker</div></div><button id="settings" aria-label="Settings" onclick="go('Settings')"></button></header>
 <main id="main"></main><nav id="nav" aria-label="Main navigation"></nav><dialog id="modal"></dialog><dialog id="bankPicker"></dialog><div id="toast" role="status"></div>
