@@ -14,4 +14,7 @@ if ($LASTEXITCODE -eq 0) {
 if ($next -gt 2100000000) { throw 'Android version code limit reached.' }
 "DEPOSITLY_BUILD_CODE=$next" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 Write-Host "This build will use Android version code $next."
+# Missing release/metadata is expected for the first publication. GitHub's
+# PowerShell runner exits with LASTEXITCODE, so clear the optional lookup failure.
+$global:LASTEXITCODE = 0
 
