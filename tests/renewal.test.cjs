@@ -1,0 +1,17 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const html=fs.readFileSync(require('path').join(__dirname,'../app/assets/index.html'),'utf8');
+const ctx=vm.createContext({});for(const m of [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].slice(0,2))vm.runInContext(m[1],ctx);
+const {FDR,Transfer}=ctx;
+const base={id:'renew',type:'FDR',name:'Monthly deposit',principal:70000000,rate:7.5,tds:15,cycle:1,cycleUnit:'months',start:'2026-09-18',first:'2026-10-18',maturity:'2026-10-18',tenureCount:1,tenureUnit:'months',autoRenew:true};
+assert(Transfer.validAsset(base));assert.equal(FDR.nextMaturity(base,'2026-10-18'),'2026-10-18');assert.equal(FDR.nextMaturity(base,'2026-10-19'),'2026-11-18');
+let ps=FDR.schedule(base,'2027-01-18');assert.equal(ps.length,4);assert(ps.every(p=>!p.principal));assert.equal(new Set(ps.map(p=>p.id)).size,ps.length);assert(ps.every(p=>p.net===FDR.amount(base,30).net));
+const stop={...base,renewalStop:'2026-12-18'};assert(Transfer.validAsset(stop));ps=FDR.schedule(stop,'2027-01-18');assert.equal(ps.filter(p=>p.principal).length,1);assert.equal(ps.at(-1).date,'2026-12-18');assert.equal(ps.at(-1).net,base.principal);assert(!Transfer.validAsset({...base,renewalStop:'2026-12-19'}));
+const short={...base,tenureCount:10,tenureUnit:'days',first:'2026-09-28',maturity:'2026-09-28'};assert(Transfer.validAsset(short));ps=FDR.schedule(short,'2026-10-18');assert.equal(ps.length,3);assert(ps.every(p=>p.net===FDR.amount(short,10).net));
+const leap={...base,start:'2024-02-29',first:'2024-03-29',maturity:'2025-02-28',tenureCount:1,tenureUnit:'years'};assert.equal(FDR.nextMaturity(leap,'2027-03-01'),'2028-02-29');
+const monthEnd={...base,start:'2026-01-31',first:'2026-02-28',maturity:'2026-02-28'};assert.equal(FDR.nextMaturity(monthEnd,'2026-03-01'),'2026-03-31');ps=FDR.schedule(monthEnd,'2026-05-31');assert.equal(new Set(ps.map(p=>p.id)).size,ps.length);
+const state={version:2,assets:[stop],paid:{},dark:false,currency:'BDT'};
+const exported=Transfer.exportData(state);assert.equal(exported.minReaderVersion,5);assert.equal(Transfer.migrate(exported).assets[0].renewalStop,stop.renewalStop);
+const restored=Transfer.readInstrumentCSV(Transfer.instrumentCSV(state)).assets[0];assert(restored.autoRenew);assert.equal(restored.cycle,1);assert.equal(restored.renewalStop,stop.renewalStop);assert.equal(restored.tenureUnit,'months');
+const legacy={...base,cycle:100,cycleUnit:'days',first:FDR.days(base.start,100),maturity:FDR.days(base.start,100),tenureCount:100,tenureUnit:'days'};assert(Transfer.validAsset(legacy));assert.equal(FDR.schedule(legacy,FDR.days(base.start,300)).length,3);
+assert.equal(FDR.schedule({...base,autoRenew:false},'2027-01-18').filter(p=>p.principal).length,1);
+console.log('PASS: custom/monthly/yearly renewal, separate interest, stop dates, leap/month-end dates, CSV/JSON round trips and legacy renewal.');

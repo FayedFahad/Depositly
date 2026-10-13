@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "checks": [
+    "empty and populated home",
+    "create deposit via bank picker",
+    "leading-zero account number",
+    "persistence after reload",
+    "navigation",
+    "calendar",
+    "mark payment received",
+    "JSON export and duplicate-safe merge",
+    "edit deposit",
+    "dark mode",
+    "no horizontal overflow at 320/360/393/430/768px",
+    "no JavaScript runtime errors"
+  ]
+}

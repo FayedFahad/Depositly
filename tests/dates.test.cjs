@@ -1,0 +1,37 @@
+require('./display.test.cjs');
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
+const nodes=new Map(),get=id=>{
+ if(!nodes.has(id))nodes.set(id,{innerHTML:'',textContent:'',value:'',style:{},dataset:{},open:false,setAttribute(k,v){this[k]=v},insertAdjacentHTML(w,h){this.innerHTML=w==='beforeend'?this.innerHTML+h:h+this.innerHTML},showModal(){this.open=true},close(){this.open=false}});
+ return nodes.get(id);
+};
+class FixedDate extends Date{constructor(...args){super(...(args.length?args:[2026,9,13,12]));}}
+const ctx={console,Date:FixedDate,Math,JSON,Number,String,Set,Array,Object,Error,Blob,URL,setTimeout:()=>0,confirm:()=>true,scrollTo(){},document:{getElementById:get,querySelector:get,body:{dataset:{},classList:{toggle(){}}}},localStorage:{getItem(){return null},setItem(){}}};
+ctx.window=ctx;vm.createContext(ctx);
+const html=fs.readFileSync(path.join(__dirname,'../app/assets/index.html'),'utf8');
+for(const m of html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g))vm.runInContext(m[1],ctx);
+const run=s=>vm.runInContext(s,ctx);
+for(const [iso,formatted] of [['2026-10-13','13 OCT, 2026'],['2024-02-29','29 FEB, 2024'],['2026-01-01','1 JAN, 2026'],['2026-12-31','31 DEC, 2026'],['2027-01-01','1 JAN, 2027']])assert.equal(run(`date('${iso}')`),formatted);
+assert(get('main').innerHTML.includes('13 OCT, 2026'),'Home date uses the common format');
+run(`state.assets=[{id:'sample',type:'FDR',name:'Sample',ownerName:'Owner',ownership:'self',principal:20000000,rate:11.77,tds:10,cycle:1,cycleUnit:'months',start:'2026-09-13',first:'2026-10-13',maturity:'2029-09-13'}];go('Calendar');month='2026-10-01';selectedDay='2026-10-13';calendar()`);
+assert.match(get('main').innerHTML,/13 OCT, 2026/);
+run("detail('sample')");
+assert.match(get('modal').innerHTML,/13 SEP, 2026/);
+assert.match(get('modal').innerHTML,/13 SEP, 2029/);
+run("paymentDetail('sample:2026-10-13')");
+assert.match(get('modal').innerHTML,/Scheduled 13 OCT, 2026/);
+assert.match(get('modal').innerHTML,/type="date" value="2026-10-13"/,'Date pickers keep machine-readable values');
+assert.match(get('modal').innerHTML,/id="receivedDisplay"[^>]*>13 OCT, 2026/);
+get('received').id='received';get('received').value='2027-01-01';run("updateDateLabel($('received'))");
+assert.equal(get('receivedDisplay').textContent,'1 JAN, 2027');
+get('received').value='';run("updateDateLabel($('received'))");assert.equal(get('receivedDisplay').textContent,'Select date');
+run("assetForm('sample')");
+assert.match(get('modal').innerHTML,/id="startDisplay"[^>]*>13 SEP, 2026/);
+assert.match(run('investmentPreview(state.assets[0])'),/13 SEP, 2029/,'Maturity preview uses common format');
+run("go('Overview')");assert.match(get('main').innerHTML,/<small>OCT<\/small>/);
+assert.match(get('main').innerHTML,/13 OCT, 2026/);
+const before=run('JSON.stringify(state.assets)');
+run("globalThis.imported=Transfer.readInstrumentCSV(Transfer.instrumentCSV(state))");
+assert.equal(run('imported.assets[0].start'),'2026-09-13');
+assert.equal(run('imported.assets[0].first'),'2026-10-13');
+assert.equal(run('JSON.stringify(state.assets)'),before);
+console.log('PASS: dates on Home/calendar/investments/payment details/form labels and previews; leap days/year boundaries; live picker labels; ISO dates preserved across CSV import.');

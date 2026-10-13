@@ -1,0 +1,65 @@
+name: Build and publish APK
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: depositly-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  apk:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Use Java 17
+        shell: pwsh
+        run: |
+          if (!$env:JAVA_HOME_17_X64) { throw 'JDK 17 is unavailable.' }
+          "JAVA_HOME=$env:JAVA_HOME_17_X64" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          "$env:JAVA_HOME_17_X64/bin" | Out-File $env:GITHUB_PATH -Append -Encoding utf8
+      - name: Prepare Android tools
+        shell: pwsh
+        run: ./scripts/bootstrap.ps1 -InstallSdk
+      - name: Test
+        shell: pwsh
+        run: ./scripts/test.ps1
+      - name: Build unsigned APK for pull requests
+        if: github.event_name == 'pull_request'
+        shell: pwsh
+        run: ./scripts/build.ps1 -Unsigned
+      - name: Choose increasing Android version code
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/ci-version.ps1
+      - name: Build signed APK
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        shell: pwsh
+        env:
+          SIGNING_KEY_BASE64: ${{ secrets.DEPOSITLY_KEYSTORE_BASE64 }}
+          SIGNING_PASSWORD: ${{ secrets.DEPOSITLY_KEYSTORE_PASSWORD }}
+        run: |
+          if (!$env:SIGNING_KEY_BASE64 -or !$env:SIGNING_PASSWORD) { throw 'Configure the Depositly signing secrets first; see docs/github.md.' }
+          $signingPath = Join-Path $env:RUNNER_TEMP 'depositly-signing'
+          New-Item -ItemType Directory -Force -Path $signingPath | Out-Null
+          $keyPath = Join-Path $signingPath 'depositly.p12'
+          $passwordPath = Join-Path $signingPath 'password.txt'
+          [IO.File]::WriteAllBytes($keyPath, [Convert]::FromBase64String($env:SIGNING_KEY_BASE64))
+          [IO.File]::WriteAllText($passwordPath, $env:SIGNING_PASSWORD, [Text.UTF8Encoding]::new($false))
+          ./scripts/build.ps1 -KeystorePath $keyPath -PasswordPath $passwordPath -VersionCodeOverride ([int]$env:DEPOSITLY_BUILD_CODE)
+      - name: Publish APK to release assets
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/publish.ps1
