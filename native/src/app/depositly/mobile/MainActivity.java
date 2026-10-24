@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.webkit.*;
 import app.depositly.mobile.cloud.DriveBackupBridge;
+import app.depositly.mobile.cloud.RegistryStorage;
 import app.depositly.mobile.reminders.ReminderBridge;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -63,7 +64,7 @@ public class MainActivity extends Activity {
         } catch (IOException e) { throw new IllegalStateException("Could not load Depositly", e); }
     }
     private boolean savedDark() {
-        try { return new JSONObject(getSharedPreferences("vault", 0).getString("data", "{}")).optBoolean("dark"); }
+        try { return new JSONObject(RegistryStorage.load(this)).optBoolean("dark"); }
         catch (Exception e) { return false; }
     }
     public void applySystemTheme(boolean dark) {
@@ -98,8 +99,10 @@ public class MainActivity extends Activity {
         pendingImport = null;
     }
     public class Store {
-        @JavascriptInterface public String load() { return getSharedPreferences("vault", 0).getString("data", ""); }
-        @JavascriptInterface public boolean save(String json) { return getSharedPreferences("vault", 0).edit().putString("data", json).commit(); }
+        @JavascriptInterface public String load() { return RegistryStorage.load(MainActivity.this); }
+        @JavascriptInterface public String owner() { return RegistryStorage.owner(MainActivity.this); }
+        @JavascriptInterface public boolean save(String json) { return RegistryStorage.save(MainActivity.this,json,owner(),load()); }
+        @JavascriptInterface public boolean saveForAccount(String json,String sub,String baseline) { return RegistryStorage.save(MainActivity.this,json,sub,baseline); }
         @JavascriptInterface public void setTheme(boolean dark) { runOnUiThread(() -> applySystemTheme(dark)); }
         @JavascriptInterface public void backup(String json) { exportFile(json, "depositly-entries.json", "application/json"); }
         @JavascriptInterface public void exportFile(String data, String name, String mime) {
@@ -138,6 +141,10 @@ public class MainActivity extends Activity {
         super.onResume();
         ReminderBridge.onResume(this, web);
         if (cloud != null) cloud.resume();
+    }
+    @Override protected void onPause() {
+        if (cloud != null) cloud.pause();
+        super.onPause();
     }
     @Override protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent); setIntent(intent);

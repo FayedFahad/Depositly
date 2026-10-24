@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const equal=(a,b)=>assert.deepEqual(JSON.parse(JSON.stringify(a)),b);
+const S=require('../app/assets/sync-registry.js'),f=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/registry.json'),'utf8'));
+equal(S.create(f.base,'seed',1),f.initial);
+equal(S.change(f.initial,f.base,f.one,'web',20),f.web);
+equal(S.change(f.initial,f.base,f.two,'phone',20),f.phone);
+equal(S.merge(f.web,f.phone),f.merged);
+assert.equal(S.backup(S.merge(f.deleted,f.phone)).data.assets.length,0);
+equal(S.change(f.deleted,S.backup(f.deleted),f.base,'restore',22),f.restored);
+console.log('PASS: shared JavaScript protocol matches the native merge, deletion and restore fixtures.');

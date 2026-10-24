@@ -96,6 +96,12 @@ public final class ReminderEngine {
         } catch (JSONException ignored) { }
         return result.toString();
     }
+    public static synchronized void restoreSettings(Context c,JSONObject value)throws JSONException {
+        String time=value.getString("time");if(!time.matches("([01]\\d|2[0-3]):[0-5]\\d"))throw new JSONException("Invalid reminder time.");
+        if(!prefs(c).edit().putBoolean("enabled",value.getBoolean("enabled")).putString("time",time).commit())throw new JSONException("Could not save reminders.");
+        if(!value.getBoolean("enabled"))manager(c).cancel(NOTICE_ID);
+        schedule(c);
+    }
     static PendingIntent open(Context c, String day, int id) {
         Intent i = c.getPackageManager().getLaunchIntentForPackage(c.getPackageName());
         if (i == null) return null;

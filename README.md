@@ -2,7 +2,7 @@
 
 Personal FDR and National Savings Certificate tracker by **Greenstone Solutions LLC**. Current application version: **1.1.0**.
 
-Google account backup is optional. Open **Settings → Account & cloud backup** to save complete backups to Depositly's private Google Drive folder and restore them on another phone. See [Google Cloud setup and backup behavior](docs/google-drive.md) before testing sign-in.
+Connect Google in **Settings → Account & backup** to synchronize saved edits automatically with the website and other devices using the same account. Dated versions remain available for explicit restore in **Backup versions**. See [Google Cloud setup and backup behavior](docs/google-drive.md) before testing sign-in.
 
 The repository contains the current app source and an automatic signed APK build. Push app changes to **main**: GitHub Actions runs the tests, builds the app with its original signing certificate, and places the APK in the **Assets** section of the **latest** release. A failed build leaves the previous APK available.
 
