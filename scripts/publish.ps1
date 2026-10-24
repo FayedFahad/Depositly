@@ -36,7 +36,7 @@ $assets = & gh api "repos/$repo/releases/tags/latest" --jq '.assets[] | select(.
 Assert-ToolExit
 foreach ($asset in $assets) {
     $parts = $asset -split "`t", 2
-    if ($parts[1] -ne "Depositly-$($version.Name).apk") { & gh api --method DELETE "repos/$repo/releases/assets/$($parts[0])"; Assert-ToolExit }
+    if ($parts[1] -ne "Depositly-$($version.Slug).apk") { & gh api --method DELETE "repos/$repo/releases/assets/$($parts[0])"; Assert-ToolExit }
 }
-& gh release upload latest (Join-Path $ProjectRoot "dist/Depositly-$($version.Name).apk") (Join-Path $ProjectRoot 'dist/build-info.json') --repo $repo --clobber | Out-Host
+& gh release upload latest (Join-Path $ProjectRoot "dist/Depositly-$($version.Slug).apk") (Join-Path $ProjectRoot 'dist/build-info.json') --repo $repo --clobber | Out-Host
 Assert-ToolExit

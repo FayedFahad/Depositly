@@ -11,7 +11,7 @@ function Get-AppVersion {
     $config = Get-Content (Join-Path $ProjectRoot 'app/apktool.yml') -Raw -Encoding UTF8
     $name = [regex]::Match($config,'(?m)^\s*versionName:\s*(.+)$').Groups[1].Value.Trim()
     $code = [regex]::Match($config,'(?m)^\s*versionCode:\s*(\d+)').Groups[1].Value
-    if ($name -notmatch '^\d+(\.\d+)+$' -or !$code) { throw 'Invalid app version configuration.' }
-    return @{Name=$name;Code=[int]$code}
+    if ($name -notmatch '^\d+(\.\d+)+( Build [1-9]\d*)?$' -or !$code) { throw 'Invalid app version configuration.' }
+    return @{Name=$name;Code=[int]$code;Slug=($name -replace ' Build ','-build-')}
 }
 

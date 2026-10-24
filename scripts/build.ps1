@@ -19,7 +19,7 @@ $alignedPath = Join-Path $buildRoot 'Depositly-aligned.apk'
 & "$buildTools/zipalign.exe" -f 4 $unsignedPath $alignedPath | Out-Host
 Assert-ToolExit
 $suffix = if ($Unsigned) { '-unsigned' } else { '' }
-$output = Join-Path $releaseRoot "Depositly-$($version.Name)$suffix.apk"
+$output = Join-Path $releaseRoot "Depositly-$($version.Slug)$suffix.apk"
 $certificate = '655445e0b1a199ef9ae90efa6e795d0800d36ef0ca725f5f87835d396796224d'
 if ($Unsigned) { Copy-Item -LiteralPath $alignedPath -Destination $output }
 else {

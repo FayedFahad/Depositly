@@ -1,6 +1,6 @@
 # Depositly
 
-Personal FDR and National Savings Certificate tracker by **Greenstone Solutions LLC**. Current application version: **1.1.0**.
+Personal FDR and National Savings Certificate tracker by **Greenstone Solutions LLC**. Current application version: **1.2 Build 1**.
 
 Connect Google in **Settings → Account & backup** to synchronize saved edits automatically with the website and other devices using the same account. Dated versions remain available for explicit restore in **Backup versions**. See [Google Cloud setup and backup behavior](docs/google-drive.md) before testing sign-in.
 
@@ -33,7 +33,7 @@ The HTML is the source of truth. The Android wrapper, Google authorization libra
 2. Wait for **Actions → Build and publish APK** to finish.
 3. Open **Releases → latest → Assets** and download the APK.
 
-CI automatically increases Android's internal version code, so a new successful build can update an installed app even when the visible version remains 1.1.0. To change the visible version, update `versionName` in `app/apktool.yml` and the version labels in the interface. Keep the configured version code increasing too. The tests check that the interface reports the configured version.
+CI automatically increases Android's internal version code, so a new successful build can update an installed app even when the visible version remains 1.2 Build 1. To change the visible version, update `versionName` in `app/apktool.yml` and the version labels in the interface. Keep the configured version code increasing too. The tests check that the interface reports the configured version.
 
 Pull requests run tests and build an unsigned APK. Signing credentials are used only for main-branch release builds. A build can also be started with **Actions → Run workflow** on `main`.
 
@@ -47,7 +47,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
 ```
 
-The signed result is `dist/Depositly-1.1.0.apk`. Local signing files belong at `private/signing/depositly.p12` and `private/signing/password.txt`. A fresh clone can run `scripts/build.ps1 -Unsigned` without them.
+The signed result is `dist/Depositly-1.2-build-1.apk`. Local signing files belong at `private/signing/depositly.p12` and `private/signing/password.txt`. A fresh clone can run `scripts/build.ps1 -Unsigned` without them.
 
 See [GitHub signing and release setup](docs/github.md) and [development notes](docs/development.md).
 

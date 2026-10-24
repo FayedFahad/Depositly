@@ -1,7 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'app/assets/index.html'),'utf8');
-const releaseVersion=fs.readFileSync(path.join(root,'app/apktool.yml'),'utf8').match(/versionName:\s*([\d.]+)/)[1];
+const releaseVersion=fs.readFileSync(path.join(root,'app/apktool.yml'),'utf8').match(/versionName:\s*([^\r\n]+)/)[1].trim();
 const elements=new Map(),get=id=>{
  if(!elements.has(id))elements.set(id,{innerHTML:'',textContent:'',value:'',style:{},dataset:{},open:false,
  setAttribute(k,v){this[k]=v},insertAdjacentHTML(where,h){this.innerHTML=where==='beforeend'?this.innerHTML+h:h+this.innerHTML},showModal(){this.open=true},close(){this.open=false}});
