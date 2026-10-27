@@ -1,5 +1,8 @@
-Depositly 1.2 Build 9
+Depositly 1.2 Build 12
 
+- Imported the supplied Build 11 visual redesign, including the emerald light/dark theme, revised controls, and simplified Home, Calendar and Settings layouts.
+- Bundled the packaged styles into the phone's loaded document so the redesign renders offline with remote requests still blocked.
+- Kept the existing interest calculations, backup format, account links and recorded receipt history.
 - Added optional interest-receiving bank account links for FDRs and savings certificates. Any saved bank can be selected independently of the deposit institution; existing deposits remain unlinked until chosen.
 - Deposit and payment details show receiving accounts. New receipts retain immutable account identities; Bank Information lists related deposits and protects accounts still in use from deletion.
 - Full JSON and Google backups preserve links and receiving-account history with reader version 7. Deposit-only exports retain ID references while keeping full bank details private.

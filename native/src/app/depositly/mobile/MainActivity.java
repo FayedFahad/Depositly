@@ -69,8 +69,11 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new Store(), "Vault");
         web.addJavascriptInterface(new ReminderBridge(this, web), "Reminders");
         web.addJavascriptInterface(cloud, "DriveBackup");
-        try (InputStream input = getAssets().open("index.html")) {
-            web.loadDataWithBaseURL("https://depositly.local/", read(input), "text/html", "UTF-8", null);
+        try {
+            String document = AppDocument.load(name -> {
+                try (InputStream input = getAssets().open(name)) { return read(input); }
+            });
+            web.loadDataWithBaseURL("https://depositly.local/", document, "text/html", "UTF-8", null);
         } catch (IOException e) { throw new IllegalStateException("Could not load Depositly", e); }
     }
     private boolean savedDark() {

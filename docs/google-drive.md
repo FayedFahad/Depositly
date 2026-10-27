@@ -1,6 +1,6 @@
 # Google account and Drive backup
 
-Depositly 1.2 Build 9 uses Google's Android AuthorizationClient for account selection and consent. It requests `openid`, profile/email and the limited `drive.appdata` scope. OAuth tokens stay in native memory and Google's token cache; they are not sent to the WebView, stored in Depositly preferences, or included in exports. There is no backend server and no embedded client secret.
+Depositly 1.2 Build 12 uses Google's Android AuthorizationClient for account selection and consent. It requests `openid`, profile/email and the limited `drive.appdata` scope. OAuth tokens stay in native memory and Google's token cache; they are not sent to the WebView, stored in Depositly preferences, or included in exports. There is no backend server and no embedded client secret.
 
 ## Google Cloud setup
 
