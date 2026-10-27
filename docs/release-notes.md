@@ -1,8 +1,9 @@
-Depositly 1.2 Build 13
+Depositly 1.2 Build 14
 
+- Fixed Custom tenure snapping back to the 100-day preset. Custom fields stay editable, and switching presets refreshes their starting values so previous hidden terms cannot override the selection.
+- Used the supplied logo image for the Android launcher and offline in-app header.
 - Deposits remembers the last selected Card or Grid view across navigation and restarts. Removed the separate Default deposit view setting.
 - Aligned Bank grid headers, account details and actions across neighboring cards, including wrapped account types and branch names. Improved spacing and copy-button placement, with a single-column fallback for older WebViews.
-- Restored the original flat Build 9 logo colors, sizing and styling.
 - Imported the supplied Build 11 visual redesign, including the emerald light/dark theme, revised controls, and simplified Home, Calendar and Settings layouts.
 - Bundled the packaged styles into the phone's loaded document so the redesign renders offline with remote requests still blocked.
 - Kept the existing interest calculations, backup format, account links and recorded receipt history.

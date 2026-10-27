@@ -4,7 +4,10 @@ const header=html.match(/<header>([\s\S]*?)<\/header>/)?.[1];assert(header,'Stat
 const logo=header.match(/<div class="logo" id="logo">([\s\S]*?)<\/div>/)?.[1],menu=header.match(/<button id="settings"[^>]*>([\s\S]*?)<\/button>/)?.[1];
 const title=header.match(/<h1>([^<]+)<\/h1>/)?.[1],tagline=header.match(/<div class="sub">([^<]+)<\/div>/)?.[1];
 assert(html.indexOf('<header>')<html.indexOf('<script'),'The final brand is available before calculation and bank-catalog scripts execute');
-assert.equal(title,'Depositly');assert.equal(tagline,'A little more clarity');assert.match(logo,/<svg\b[^>]*viewBox="0 0 32 32"/);assert.match(logo,/M9 7h6a9 9 0 0 1 0 18H9V7Z/);assert.match(logo,/m12 18 4-4 3 2 5-6/);assert.match(menu,/M4 6h16M4 12h16M4 18h16/);
+assert.equal(title,'Depositly');assert.equal(tagline,'A little more clarity');assert.match(logo,/<img\b[^>]*src="data:image\/png;base64,/);assert.match(logo,/alt=""/);
+const headerImage=Buffer.from(logo.match(/src="data:image\/png;base64,([^"]+)"/)[1],'base64');
+assert.deepEqual(headerImage,fs.readFileSync(path.join(__dirname,'../app/res/drawable/icon.png')),'The offline header and Android launcher use the same uploaded logo');
+assert.match(menu,/M4 6h16M4 12h16M4 18h16/);
 assert.doesNotMatch(header,/Personal investment tracker|M3 9l9-6 9 6/,'The initial header never contains retired branding');
 
 // Model the real static header, then pause between every inline script. The old

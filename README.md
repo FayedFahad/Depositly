@@ -1,6 +1,6 @@
 # Depositly
 
-Personal FDR and National Savings Certificate tracker by **Greenstone Solutions LLC**. Current application version: **1.2 Build 13**.
+Personal FDR and National Savings Certificate tracker by **Greenstone Solutions LLC**. Current application version: **1.2 Build 14**.
 
 Connect Google in **Settings → Account & backup** to synchronize saved edits automatically with the website and other devices using the same account. Dated versions remain available for explicit restore in **Backup versions**. See [Google Cloud setup and backup behavior](docs/google-drive.md) before testing sign-in.
 
@@ -64,7 +64,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
 ```
 
-The signed result is `dist/Depositly-1.2-build-13.apk`. Local signing files belong at `private/signing/depositly.p12` and `private/signing/password.txt`. A fresh clone can run `scripts/build.ps1 -Unsigned` without them.
+The signed result is `dist/Depositly-1.2-build-14.apk`. Local signing files belong at `private/signing/depositly.p12` and `private/signing/password.txt`. A fresh clone can run `scripts/build.ps1 -Unsigned` without them.
 
 See [GitHub signing and release setup](docs/github.md) and [development notes](docs/development.md).
 

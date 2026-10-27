@@ -1,5 +1,5 @@
 version: 3.0.3
-apkFileName: Depositly-1.2-build-13.apk
+apkFileName: Depositly-1.2-build-14.apk
 usesFramework:
   ids:
   - 1
@@ -7,8 +7,8 @@ sdkInfo:
   minSdkVersion: 26
   targetSdkVersion: 34
 versionInfo:
-  versionCode: 50
-  versionName: 1.2 Build 13
+  versionCode: 63
+  versionName: 1.2 Build 14
 resourcesInfo:
   packageId: 127
   keepRawValues: true
