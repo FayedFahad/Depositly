@@ -3,8 +3,10 @@ $version = Get-AppVersion
 $repo = $env:GITHUB_REPOSITORY
 $commit = $env:GITHUB_SHA
 if (!$repo -or !$commit) { throw 'Publishing requires the GitHub Actions repository and commit context.' }
-$notes = Join-Path $ProjectRoot 'build/release-notes.md'
+$notes = Join-Path (Get-AppWorkDirectory) 'release-notes.md'
 $info = Get-Content (Join-Path $ProjectRoot 'dist/build-info.json') -Raw | ConvertFrom-Json
+if ($info.versionName -ne $version.Name -or [long]$info.versionCode -lt $version.Code) { throw 'APK version metadata does not match the current source version. Rebuild before publishing.' }
+Assert-NewAppRelease @{Name=$info.versionName;Code=$info.versionCode} (Join-Path $ProjectRoot 'build/previous-release/build-info.json')
 $changesPath = Join-Path $ProjectRoot 'docs/release-notes.md'
 $changes = if (Test-Path $changesPath) { Get-Content $changesPath -Raw } else { '' }
 @"

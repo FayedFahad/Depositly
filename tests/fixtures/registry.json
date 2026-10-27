@@ -173,6 +173,14 @@
         ],
         "d": true
       },
+      "a/a/interestType": {
+        "s": [
+          1,
+          0,
+          "seed"
+        ],
+        "d": true
+      },
       "a/a/cycle": {
         "s": [
           1,
@@ -355,6 +363,14 @@
         "v": "Receipt"
       },
       "a/a/type": {
+        "s": [
+          1,
+          0,
+          "seed"
+        ],
+        "d": true
+      },
+      "a/a/interestType": {
         "s": [
           1,
           0,
@@ -551,6 +567,14 @@
         ],
         "d": true
       },
+      "a/a/interestType": {
+        "s": [
+          1,
+          0,
+          "seed"
+        ],
+        "d": true
+      },
       "a/a/cycle": {
         "s": [
           1,
@@ -733,6 +757,14 @@
         "v": "Receipt"
       },
       "a/a/type": {
+        "s": [
+          1,
+          0,
+          "seed"
+        ],
+        "d": true
+      },
+      "a/a/interestType": {
         "s": [
           1,
           0,
@@ -929,6 +961,14 @@
         ],
         "d": true
       },
+      "a/a/interestType": {
+        "s": [
+          1,
+          0,
+          "seed"
+        ],
+        "d": true
+      },
       "a/a/cycle": {
         "s": [
           1,
@@ -1111,6 +1151,14 @@
         "v": "Receipt"
       },
       "a/a/type": {
+        "s": [
+          1,
+          0,
+          "seed"
+        ],
+        "d": true
+      },
+      "a/a/interestType": {
         "s": [
           1,
           0,

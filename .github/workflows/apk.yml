@@ -38,7 +38,7 @@ jobs:
         if: github.event_name == 'pull_request'
         shell: pwsh
         run: ./scripts/build.ps1 -Unsigned
-      - name: Choose increasing Android version code
+      - name: Check release version and choose increasing Android code
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         shell: pwsh
         env:

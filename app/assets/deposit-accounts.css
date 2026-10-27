@@ -1,0 +1,23 @@
+.receiving-account{display:grid;gap:5px;margin:22px 0;padding:16px;background:var(--soft);border-radius:14px;min-width:0}
+.receiving-account-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+.receiving-account>b,.receiving-account-number,.receiving-account-preview>b,.receiving-account-preview>strong{font-size:15px;font-weight:650;line-height:1.5;overflow-wrap:anywhere}
+.receiving-account>span:not(.receiving-account-label),.receiving-account>small,.receiving-account-preview>span{font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.receiving-account-number,.receiving-account-preview>strong{font-variant-numeric:tabular-nums}
+.receiving-account-preview{display:grid;gap:3px;padding:13px 15px;margin:8px 0 16px;background:var(--soft);border-radius:12px;min-width:0}
+.receiving-account-preview[hidden]{display:none}
+.receiving-account-hint{font-size:12px;margin:8px 0 20px}
+#bankAccountId{width:100%;min-width:0;text-overflow:ellipsis}
+.holding-account{display:grid;gap:3px;padding:10px 0;margin-bottom:8px;border-bottom:1px solid var(--line);font-size:12px;line-height:1.5;text-align:left;overflow-wrap:anywhere}
+.holding-account>span{color:var(--muted)}
+.holding-account>b{font-weight:600;font-variant-numeric:tabular-nums}
+.payment-account{font-size:12px;line-height:1.5;color:var(--muted);overflow-wrap:anywhere;margin-top:8px}
+.bank-account-card .bank-linked-deposits{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;width:100%;padding:9px 0;margin-top:10px;background:transparent;border:0;border-radius:4px;color:var(--brand);font-size:12px;text-align:left}
+.bank-linked-deposits svg,.linked-deposit svg{width:18px;height:18px;flex-shrink:0}
+.linked-deposits{margin:26px 0}
+.linked-deposits .section{margin:0 0 12px}
+.linked-deposits h3{margin:0;font-size:18px}
+.linked-deposit{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:52px;padding:12px 0;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;text-align:left}
+.linked-deposit>span{display:grid;gap:3px;min-width:0}
+.linked-deposit b{font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.linked-deposit small{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.bank-linked-deposits:focus-visible,.linked-deposit:focus-visible{outline:2px solid var(--brand);outline-offset:3px}

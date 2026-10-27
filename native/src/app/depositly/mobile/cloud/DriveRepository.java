@@ -28,6 +28,19 @@ public final class DriveRepository {
         validate(value);
         return value;
     }
+    private static boolean bankText(JSONObject account,String field,int max,boolean optional) throws Exception {
+        if(optional&&!account.has(field))return true;
+        Object value=account.opt(field);if(!(value instanceof String))return false;
+        String text=(String)value;
+        return text.length()<=max&&(optional||!text.trim().isEmpty())&&!text.matches("(?s).*[\\x00-\\x1f\\x7f-\\x9f\\u2028\\u2029].*");
+    }
+    private static void validateBankAccountLink(JSONObject value,boolean receiptSnapshot)throws Exception {
+        if(value.has("bankAccountId")){Object id=value.opt("bankAccountId");if(!(id instanceof String)||!((String)id).matches("[A-Za-z0-9_-]{1,100}"))throw new IOException("Invalid linked bank account ID.");}
+        if(receiptSnapshot&&value.has("bankAccountSnapshot")){
+            JSONObject account=value.optJSONObject("bankAccountSnapshot");
+            if(!value.has("bankAccountId")||account==null||!bankText(account,"bankName",150,false)||!bankText(account,"accountTitle",120,false)||!bankText(account,"accountNumber",100,false))throw new IOException("Invalid receiving bank account history.");
+        }
+    }
     public static void validate(String value) throws Exception {
         if (value == null || value.getBytes(StandardCharsets.UTF_8).length > 20000000) throw new IOException("Backup is too large.");
         JSONObject backup = new JSONObject(value);
@@ -35,6 +48,19 @@ public final class DriveRepository {
             throw new IOException("Unsupported Google Drive backup. Update Depositly or use a file backup.");
         backup.getJSONObject("data").getJSONArray("assets");
         backup.getJSONObject("data").getJSONObject("paid");
+        JSONObject data=backup.getJSONObject("data");
+        if(data.has("minReaderVersion")){
+            Object reader=data.get("minReaderVersion");double n=reader instanceof Number?((Number)reader).doubleValue():0;
+            if(!(reader instanceof Number)||!Double.isFinite(n)||n<1||n>7||n!=Math.floor(n))throw new IOException("Unsupported Depositly reader version. Update the app before restoring this backup.");
+        }
+        if(data.has("bankAccounts")){
+            JSONArray accounts=data.getJSONArray("bankAccounts");java.util.Set<String> bankIds=new java.util.HashSet<>();
+            if(accounts.length()>500)throw new IOException("Too many bank accounts.");
+            for(int i=0;i<accounts.length();i++){
+                JSONObject account=accounts.getJSONObject(i);Object id=account.opt("id");
+                if(!(id instanceof String)||!((String)id).matches("[A-Za-z0-9_-]{1,100}")||!bankIds.add((String)id)||!bankText(account,"bankId",100,true)||!bankText(account,"bankName",150,false)||!bankText(account,"accountTitle",120,false)||!bankText(account,"accountNumber",100,false)||!bankText(account,"branchName",150,false)||!bankText(account,"routingNumber",100,false)||!bankText(account,"accountType",100,true))throw new IOException("Invalid bank account details.");
+            }
+        }
         if(backup.has("sync"))SyncRegistry.validate(backup.getJSONObject("sync"));
         JSONObject reminders=backup.optJSONObject("notificationSettings");
         if(reminders!=null&&(!(reminders.get("enabled") instanceof Boolean)||!reminders.getString("time").matches("([01]\\d|2[0-3]):[0-5]\\d")))throw new IOException("Invalid reminder settings.");
@@ -42,16 +68,26 @@ public final class DriveRepository {
         if(assets.length()>500)throw new IOException("Too many investments.");
         for(int i=0;i<assets.length();i++){
             JSONObject a=assets.getJSONObject(i);String id=a.getString("id");double principal=a.getDouble("principal"),rate=a.getDouble("rate"),tds=a.getDouble("tds");
+            validateBankAccountLink(a,false);
+            if(a.has("interestType")&&(!(a.get("interestType") instanceof String)||!java.util.Arrays.asList("simple","compound").contains(a.getString("interestType"))))throw new IOException("Invalid interest type.");
+            if("compound".equals(a.optString("interestType"))&&data.optInt("minReaderVersion",0)<6)throw new IOException("Compound interest backups must require Depositly reader version 6.");
             if(!id.matches("[A-Za-z0-9_-]{1,100}")||!ids.add(id)||a.getString("name").trim().isEmpty()||a.getString("name").length()>120||!java.util.Arrays.asList("FDR","NSC","Sanchaypatra","National Savings Certificate").contains(a.optString("type"))||principal<=0||principal>1e13||principal!=Math.floor(principal)||!Double.isFinite(rate)||rate<0||rate>100||!Double.isFinite(tds)||tds<0||tds>100)throw new IOException("Invalid investment values.");
             java.time.LocalDate start=java.time.LocalDate.parse(a.getString("start")),first=java.time.LocalDate.parse(a.getString("first")),end=java.time.LocalDate.parse(a.getString("maturity"));
             if(!start.isBefore(first)||first.isAfter(end))throw new IOException("Invalid investment dates.");
+            if("compound".equals(a.optString("interestType"))){
+                Object count=a.opt("tenureCount"),unit=a.opt("tenureUnit");double n=count instanceof Number?((Number)count).doubleValue():0;
+                if(!(count instanceof Number)||!Double.isFinite(n)||n<1||n>36525||n!=Math.floor(n)||!(unit instanceof String)||!java.util.Arrays.asList("days","months","years").contains(unit))throw new IOException("Compound deposits require an explicit valid tenure count and unit.");
+                java.time.LocalDate expected="days".equals(unit)?start.plusDays((long)n):"months".equals(unit)?start.plusMonths((long)n):start.plusYears((long)n);
+                if(!expected.equals(end)||java.time.temporal.ChronoUnit.DAYS.between(start,end)>36525||start.isBefore(java.time.LocalDate.of(1900,1,1))||end.isAfter(java.time.LocalDate.of(2199,12,31)))throw new IOException("Compound deposit tenure must match its maturity date.");
+            }
         }
         JSONObject paid=backup.getJSONObject("data").getJSONObject("paid");java.util.Iterator<String> keys=paid.keys();
         while(keys.hasNext()){
             String key=keys.next();JSONObject receipt=paid.getJSONObject(key);double amount=receipt.getDouble("amount");
             if(!key.matches("[A-Za-z0-9_-]{1,100}:(?:\\d{4}-\\d{2}-\\d{2}(?::final)?|principal)")||!ids.contains(key.split(":")[0])||!Double.isFinite(amount)||amount<0||amount>1e13||amount!=Math.floor(amount)||receipt.optString("notes").length()>500)throw new IOException("Invalid receipt values.");
-            java.time.LocalDate.parse(receipt.getString("date"));JSONObject snapshot=receipt.optJSONObject("snapshot");if(snapshot!=null&&!key.split(":")[0].equals(snapshot.optString("assetId")))throw new IOException("Invalid receipt history.");
+            java.time.LocalDate.parse(receipt.getString("date"));JSONObject snapshot=receipt.optJSONObject("snapshot");if(snapshot!=null){if(!key.split(":")[0].equals(snapshot.optString("assetId")))throw new IOException("Invalid receipt history.");validateBankAccountLink(snapshot,true);}
         }
+        if(SyncRegistry.minimumReader(data)>=7&&data.optInt("minReaderVersion",0)<7)throw new IOException("Linked bank account backups must require Depositly reader version 7.");
     }
     public void save(String payload) throws Exception {
         validate(payload);

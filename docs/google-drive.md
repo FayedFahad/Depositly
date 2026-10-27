@@ -1,6 +1,6 @@
 # Google account and Drive backup
 
-Depositly 1.2 Build 1 uses Google's Android AuthorizationClient for account selection and consent. It requests `openid`, profile/email and the limited `drive.appdata` scope. OAuth tokens stay in native memory and Google's token cache; they are not sent to the WebView, stored in Depositly preferences, or included in exports. There is no backend server and no embedded client secret.
+Depositly 1.2 Build 9 uses Google's Android AuthorizationClient for account selection and consent. It requests `openid`, profile/email and the limited `drive.appdata` scope. OAuth tokens stay in native memory and Google's token cache; they are not sent to the WebView, stored in Depositly preferences, or included in exports. There is no backend server and no embedded client secret.
 
 ## Google Cloud setup
 
@@ -20,6 +20,10 @@ These Cloud Console settings could not be inspected from this workspace; there i
 Open **Settings → Account & backup → Connect Google account**, select the same account used on the website, and allow Drive access. The latest registry applies automatically. Normal edits synchronize quietly without backup review dialogs. JSON/CSV file imports keep their explicit review screen.
 
 The shared registry contains Self and Others investments, receipt history and snapshots, currency, number format, theme, default deposit view, and reminder time/enabled preferences. Notification permission remains controlled by Android; automatic sync never opens a notification-permission prompt. Credentials and generated reminder plans are excluded.
+
+Interest type is part of each deposit's financial terms and is synchronized with its cycle and tenure. The updated website and phone app support compound deposits with reader version 6; older clients reject the backup until updated. Simple-only backups remain compatible with reader version 5. Corrected legacy 100-day payout terms are saved back to the registry using the original snapshot as the merge baseline, preserving concurrent edits and existing receipts.
+
+Optional `bankAccountId` links connect deposits to saved receiving accounts without changing their institution or financial terms. New receipt snapshots can retain the receiving bank, holder and account number. Any live link or retained receiving-account history requires reader version 7 in both the app and website. The registry derives this requirement from its live records so a concurrent display-preference edit cannot downgrade it. Partial exports may retain an unresolved ID; the interface asks the user to select a saved account rather than guessing a connection.
 
 Local edits commit atomically to account-scoped storage with field revisions and deletion markers. The app pulls on opening/resuming and every 15 seconds while active. Persisted JobScheduler jobs retry on a network connection and request periodic refreshes (15-minute minimum). Android may delay background execution, especially under battery restrictions or after force-stop. Website sync runs while its page is open. Offline changes remain queued until the next successful connection.
 

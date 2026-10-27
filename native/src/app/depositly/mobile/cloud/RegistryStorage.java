@@ -42,8 +42,9 @@ public final class RegistryStorage {
     }
     static JSONObject wrap(Context c,JSONObject state)throws Exception {
         JSONObject value=new JSONObject(state.toString());value.remove("exportedAt");
-        value.put("format","bd.fdr.vault.entries").put("formatVersion",1).put("minReaderVersion",5).put("version",1).put("scope","all");
+        value.put("format","bd.fdr.vault.entries").put("formatVersion",1).put("minReaderVersion",Math.max(5,value.optInt("minReaderVersion",5))).put("version",1).put("scope","all");
         JSONArray assets=value.getJSONArray("assets");for(int i=0;i<assets.length();i++){JSONObject a=assets.getJSONObject(i);if("NSC".equals(a.optString("type")))a.put("type","Sanchaypatra");}
+        value.put("minReaderVersion",Math.max(SyncRegistry.minimumReader(value),value.optInt("minReaderVersion",5)));
         JSONObject n=new JSONObject(ReminderEngine.status(c));
         return new JSONObject().put("format",DriveRepository.FORMAT).put("version",1).put("data",value).put("notificationSettings",new JSONObject().put("enabled",n.optBoolean("enabled")).put("time",n.optString("time","09:00")));
     }

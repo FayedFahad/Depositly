@@ -1,19 +1,28 @@
 param([switch]$Unsigned, [string]$SdkPath, [string]$KeystorePath, [string]$PasswordPath, [int]$VersionCodeOverride=0)
 . (Join-Path $PSScriptRoot 'common.ps1')
-$sdkRoot = Get-AndroidSdkPath $SdkPath
-& (Join-Path $PSScriptRoot 'bootstrap.ps1') -SdkPath $sdkRoot
-$buildTools = Join-Path $sdkRoot 'build-tools/34.0.0'
 $version = Get-AppVersion
 if ($VersionCodeOverride) {
     if ($VersionCodeOverride -lt $version.Code -or $VersionCodeOverride -gt 2100000000) { throw 'Invalid Android version code override.' }
     $version.Code = $VersionCodeOverride
 }
-$buildRoot = Join-Path $ProjectRoot 'build'
+if (!$Unsigned) {
+    Assert-NewAppRelease $version (Join-Path $ProjectRoot 'dist/build-info.json')
+    if ($env:GITHUB_ACTIONS -eq 'true') {
+        Assert-NewAppRelease $version (Join-Path $ProjectRoot 'build/previous-release/build-info.json')
+    }
+}
+& node (Join-Path $ProjectRoot 'tests/display.test.cjs') | Out-Host
+Assert-ToolExit
+$sdkRoot = Get-AndroidSdkPath $SdkPath
+& (Join-Path $PSScriptRoot 'bootstrap.ps1') -SdkPath $sdkRoot
+$buildTools = Join-Path $sdkRoot 'build-tools/34.0.0'
+$workRoot = Get-AppWorkDirectory
+$buildRoot = Join-Path $workRoot 'build'
 $releaseRoot = Join-Path $ProjectRoot 'dist'
 New-Item -ItemType Directory -Force -Path $buildRoot, $releaseRoot | Out-Null
 $env:DEPOSITLY_BUILD_CODE = [string]$version.Code
 & (Join-Path $PSScriptRoot 'gradle.ps1') -SdkPath $sdkRoot -Tasks @('assembleRelease')
-$unsignedPath = Join-Path $ProjectRoot 'native/build/outputs/apk/release/Depositly-release-unsigned.apk'
+$unsignedPath = Join-Path $workRoot 'native-build/outputs/apk/release/Depositly-release-unsigned.apk'
 if (!(Test-Path $unsignedPath)) { throw 'Gradle did not produce the unsigned release APK.' }
 $alignedPath = Join-Path $buildRoot 'Depositly-aligned.apk'
 & "$buildTools/zipalign.exe" -f 4 $unsignedPath $alignedPath | Out-Host
@@ -39,6 +48,7 @@ $badging = & "$buildTools/aapt.exe" dump badging $output
 Assert-ToolExit
 if (!$badging[0].Contains("name='app.depositly.mobile' versionCode='$($version.Code)' versionName='$($version.Name)'")) { throw 'APK package/version verification failed.' }
 $info = [ordered]@{package='app.depositly.mobile';versionName=$version.Name;versionCode=$version.Code;commit=$env:GITHUB_SHA;apkSha256=(Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash.ToLowerInvariant();certificateSha256=if ($Unsigned) {$null} else {$certificate}}
-$info | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $releaseRoot 'build-info.json') -Encoding UTF8
+$infoName = if ($Unsigned) { 'build-info-unsigned.json' } else { 'build-info.json' }
+$info | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $releaseRoot $infoName) -Encoding UTF8
 Write-Host "Built and verified $output (Android version code $($version.Code))."
 

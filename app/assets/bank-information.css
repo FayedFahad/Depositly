@@ -1,0 +1,69 @@
+/* Phone account directory: full values, familiar institutions, quiet controls. */
+body[data-page="BankInformation"] .bank-account-heading{gap:12px;margin-bottom:22px;align-items:flex-start}
+body[data-page="BankInformation"] .bank-account-heading h2{font-size:clamp(25px,6.8vw,30px);line-height:1.15;letter-spacing:-.7px;margin:0 0 9px}
+body[data-page="BankInformation"] .bank-account-heading .sub{font-size:13px;line-height:1.5;margin:0;max-width:25ch}
+body[data-page="BankInformation"] .bank-add-button{display:inline-flex;align-items:center;gap:5px;justify-content:center;padding:9px 13px;min-height:44px;flex-shrink:0}
+body[data-page="BankInformation"] .bank-add-button svg{width:18px;height:18px}
+.bank-account-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 20px;margin-bottom:2px}
+.bank-account-total{display:block;flex:1;min-width:0;font-size:14px;font-weight:750;font-variant-numeric:tabular-nums}
+.bank-account-total>span{display:block;margin-top:3px;font-size:12px;font-weight:450;color:var(--muted)}
+.bank-account-toolbar .bank-view-options{display:flex;flex:none;gap:3px;margin:0;padding:3px;border:1px solid var(--line);border-radius:13px;background:var(--surface)}
+.bank-account-toolbar .bank-view-options button{min-height:44px;flex:none;gap:5px;padding:8px 10px;font-size:12px;border:0;background:transparent;border-radius:9px;color:var(--muted)}
+.bank-account-toolbar .bank-view-options [aria-pressed="true"]{background:var(--soft);color:var(--brand);box-shadow:none}
+.bank-account-toolbar .bank-view-options svg{width:17px;height:17px}
+body[data-page="BankInformation"] .bank-account-group{margin:0 0 28px}
+body[data-page="BankInformation"] .bank-group-heading{gap:11px;margin:0 0 12px}
+body[data-page="BankInformation"] .bank-group-logo{width:44px;height:44px;padding:6px;border-radius:12px;background:#fff;border:1px solid var(--line)}
+.bank-group-name{flex:1;min-width:0}
+body[data-page="BankInformation"] .bank-group-name h3{font-size:14px;line-height:1.4;letter-spacing:0;font-weight:750;margin:0 0 3px}
+.bank-group-name>span{font-size:12px;line-height:1.4;color:var(--muted)}
+body[data-page="BankInformation"] .bank-group-accounts{gap:12px}
+body[data-page="BankInformation"] .bank-account-card{padding:17px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:none;overflow:hidden}
+body[data-page="BankInformation"] .bank-account-top{align-items:flex-start;gap:8px;margin:0 0 15px}
+.bank-account-holder{flex:1;min-width:0}
+.bank-account-holder h4{font-size:16px;line-height:1.4;font-weight:750;letter-spacing:-.2px;overflow-wrap:anywhere;margin:0}
+.bank-account-type{display:inline-block;max-width:100%;margin-top:6px;padding:3px 7px;border-radius:5px;background:var(--soft);color:var(--brand);font-size:11px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
+body[data-page="BankInformation"] .bank-account-card .bank-account-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 14px;border:0;padding:0;margin:0}
+body[data-page="BankInformation"] .bank-account-card .bank-account-details>div{min-width:0;padding:0;border:0}
+body[data-page="BankInformation"] .bank-account-card .bank-account-details dt{font-size:11px;line-height:1.4;font-weight:500;color:var(--muted)}
+body[data-page="BankInformation"] .bank-account-card .bank-account-details dd{font-size:13px;line-height:1.5;font-weight:600;margin-top:5px}
+body[data-page="BankInformation"] .bank-account-card .bank-account-details>[data-bank-field="accountNumber"]{grid-column:1/-1;padding:11px 12px;border-radius:11px;background:var(--soft)}
+body[data-page="BankInformation"] .bank-account-card [data-bank-field="accountNumber"] dd{display:flex;align-items:center;margin:0;gap:6px}
+body[data-page="BankInformation"] .bank-account-card [data-bank-field="accountNumber"] .bank-number-value{font-size:18px;line-height:1.5;font-weight:650;letter-spacing:.1px;color:var(--text)}
+body[data-page="BankInformation"] .bank-account-card [data-bank-field="routingNumber"]{grid-column:auto}
+body[data-page="BankInformation"] .bank-account-card [data-bank-field="routingNumber"] dd{display:flex;align-items:center;gap:2px;min-height:44px;margin-top:0}
+body[data-page="BankInformation"] .bank-account-card [data-bank-field="routingNumber"] .bank-number-value{font-size:13px}
+body[data-page="BankInformation"] .bank-account-card [data-bank-field="branchName"] dd{min-height:44px;display:flex;align-items:center;margin-top:0}
+.bank-account-actions-redesigned{display:flex;gap:8px;margin-top:18px}
+.bank-account-actions-redesigned button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;font-size:13px;line-height:1.4;flex:1;padding:8px 12px;border-radius:11px}
+.bank-account-actions-redesigned .bank-delete-button{flex:0 0 44px;width:44px;padding:10px;background:transparent;border-color:transparent;color:var(--red)}
+.bank-account-actions-redesigned .bank-delete-button svg{width:18px;height:18px}
+.bank-account-actions-redesigned .bank-delete-label{display:none}
+body[data-page="BankInformation"] .bank-account-card .bank-account-actions{padding-top:14px;margin-top:7px;border-top:1px solid var(--line)}
+body[data-page="BankInformation"] .bank-account-card .bank-account-actions button{font-size:12px;min-height:44px}
+body[data-page="BankInformation"] .bank-account-card .bank-copy-button{width:44px;min-height:44px;padding:12px;border-radius:9px;background:transparent;color:var(--brand)}
+body[data-page="BankInformation"] .bank-account-card .bank-copy-button:hover{background:var(--surface)}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-group-accounts{grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card{padding:13px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-top{gap:2px;margin-bottom:12px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-holder h4{font-size:13px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-type{font-size:10px;padding:3px 5px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-more-button{width:44px;min-height:44px;margin:-7px -8px 0 0;background:transparent;border-radius:9px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .bank-account-details{grid-template-columns:1fr;gap:12px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card [data-bank-field="accountNumber"]{padding:9px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .bank-number-detail dt{padding-right:30px;font-size:10px;min-height:30px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .bank-number-detail dd{display:block;min-height:0}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .bank-number-value{display:block;font-size:13px;line-height:1.5}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .bank-copy-button{position:absolute;top:-10px;right:-8px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card [data-bank-field="accountNumber"] .bank-copy-button{top:-2px;right:0}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card [data-bank-field="routingNumber"]{grid-column:auto}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card [data-bank-field="branchName"] dd{min-height:0;margin-top:5px;font-size:12px;line-height:1.5}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-grid-actions button{background:transparent;color:var(--brand);border:0;font-weight:650;justify-content:flex-start;padding-left:0}
+.bank-account-empty{text-align:center;padding:34px 16px 20px}
+.bank-empty-mark{display:grid;place-items:center;width:72px;height:72px;margin:0 auto 22px;background:var(--soft);color:var(--brand);border-radius:20px}
+.bank-empty-mark svg{width:34px;height:34px}
+.bank-account-empty h3{margin:0 0 12px;font-size:21px;line-height:1.25;letter-spacing:-.4px}
+.bank-account-empty p{max-width:28ch;margin:0 auto 24px;font-size:14px;line-height:1.6}
+.bank-account-empty .primary{display:inline-flex;align-items:center;gap:8px;justify-content:center;min-height:48px}
+.bank-account-empty .primary svg{width:18px;height:18px}
+@media(max-width:350px){.bank-account-toolbar{gap:8px}.bank-account-toolbar .bank-view-options button{padding:8px;font-size:11px}.bank-account-toolbar .bank-view-options svg{width:15px;height:15px}body[data-page="BankInformation"] .bank-account-card{padding:14px}body[data-page="BankInformation"] .bank-account-layout-grid .bank-group-accounts{grid-template-columns:1fr}}

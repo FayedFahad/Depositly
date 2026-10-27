@@ -1,0 +1,52 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
+const html=fs.readFileSync(process.env.DEPOSITLY_ANDROID_SOURCE||path.join(__dirname,'../app/assets/index.html'),'utf8');
+const scripts=[...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)];
+const context=vm.createContext({console,Date,Math,JSON,Number,String,Set,Map,Array,Object,Error});
+for(const script of scripts.slice(0,2))vm.runInContext(script[1],context);
+const T=context.Transfer,S=require('../app/assets/sync-registry.js');
+const equal=(a,b)=>assert.deepEqual(JSON.parse(JSON.stringify(a)),b);
+const account={id:'bank1',bankId:'ab-bank-plc',bankName:'AB Bank PLC',accountTitle:'Sample Holder',accountNumber:'00123456789',branchName:'Main branch',routingNumber:'000123456',accountType:'Savings'};
+const old={version:2,assets:[],paid:{},dark:false};
+equal(T.migrate(old).bankAccounts,[]);
+const state=T.migrate({...old,bankAccounts:[account]});
+assert.equal(state.bankAccounts[0].accountNumber,'00123456789');
+assert.equal(state.bankAccounts[0].routingNumber,'000123456');
+assert.notEqual(state.bankAccounts[0],account,'Migration does not alias account objects');
+assert(T.validBankAccount({...account,bankId:undefined,accountType:undefined}));
+assert(T.validBankAccount({...account,bankId:'',accountType:''}));
+assert(T.validBankAccount({...account,accountNumber:'AB-001 234'}),'Account identifiers remain text');
+for(const key of ['bankName','accountTitle','accountNumber','branchName','routingNumber']){
+ for(const value of ['', '   ', undefined, 123, null])assert(!T.validBankAccount({...account,[key]:value}),`${key} rejects ${value}`);
+}
+for(const key of ['bankId','bankName','accountTitle','accountNumber','branchName','routingNumber','accountType']){
+ for(const control of ['\n','\r','\t','\0','\x7f','\x85','\u2028','\u2029'])assert(!T.validBankAccount({...account,[key]:'a'+control+'b'}),`${key} rejects multiline/control text`);
+}
+assert(!T.validBankAccount({...account,accountTitle:'a'.repeat(121)}));
+assert(!T.validBankAccount({...account,bankName:'a'.repeat(151)}));
+assert(!T.validBankAccount({...account,branchName:'a'.repeat(151)}));
+for(const key of ['bankId','accountNumber','routingNumber','accountType'])assert(!T.validBankAccount({...account,[key]:'a'.repeat(101)}));
+for(const id of ['', 'bad/id', 'bad:id', 'a'.repeat(101)])assert(!T.validBankAccount({...account,id}));
+for(const bankAccounts of [null,{},'bad',[account,account],[{...account,accountNumber:123}],Array.from({length:501},(_,i)=>({...account,id:'bank'+i}))])assert.throws(()=>T.migrate({...old,bankAccounts}),/bank account/);
+const full=T.exportData(state),selected=T.exportData(state,[]);
+equal(full.bankAccounts,[account]);
+assert(!Object.hasOwn(selected,'bankAccounts'),'Selecting deposits never exports private bank information');
+equal(T.migrate(JSON.parse(JSON.stringify(full))).bankAccounts,[account]);
+assert(!T.instrumentCSV(state).includes('00123456789'),'Instrument CSV never includes bank accounts');
+const second={...account,id:'bank2',bankName:'Another bank',accountNumber:'0098765'};
+const changed={...account,accountTitle:'Edited remotely'};
+const merged=T.merge(state,T.migrate({...old,bankAccounts:[changed,second]}));
+assert.equal(merged.bankAdded,1);assert.equal(merged.bankConflicts,1);assert.equal(merged.bankDuplicates,0);
+equal(merged.state.bankAccounts,[account,second]);
+const duplicate=T.merge(state,state);
+assert.equal(duplicate.bankAdded,0);assert.equal(duplicate.bankDuplicates,1);assert.equal(duplicate.bankConflicts,0);
+equal(T.merge(state,T.migrate(old)).state.bankAccounts,[account]);
+assert.throws(()=>T.merge(T.migrate({...old,bankAccounts:Array.from({length:500},(_,i)=>({...account,id:'limit'+i}))}),T.migrate({...old,bankAccounts:[account]})),/500-bank-account/);
+const backup=data=>({format:'depositly-google-drive',version:1,data:T.exportData(data),notificationSettings:{enabled:false,time:'09:00'}});
+const registry=S.create(backup(state),'phone',1);
+equal(S.backup(registry).data.bankAccounts,[account]);
+const edited={...state,bankAccounts:[{...account,branchName:'New branch'}]};
+const next=S.change(registry,backup(state),backup(edited),'phone',2);
+equal(S.backup(next).data.bankAccounts,edited.bankAccounts);
+const cleared=S.change(next,backup(edited),backup({...state,bankAccounts:[]}),'phone',3);
+equal(S.backup(S.merge(registry,next,cleared)).data.bankAccounts,[]);
+console.log('PASS: bank account validation, leading zeros, legacy migration, full/selected export privacy, merge conflicts/limits, and registry backup/edit/delete round trips.');

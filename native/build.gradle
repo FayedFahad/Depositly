@@ -1,4 +1,6 @@
 plugins { id 'com.android.application' version '8.9.2' }
+def externalBuildDirectory = providers.gradleProperty('depositlyBuildDirectory')
+if (externalBuildDirectory.isPresent()) { layout.buildDirectory.set(file(externalBuildDirectory.get())) }
 android {
     namespace 'app.depositly.mobile'
     compileSdk 34

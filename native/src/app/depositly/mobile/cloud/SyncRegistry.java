@@ -6,7 +6,7 @@ import org.json.*;
 /** Same field registers and tombstones as assets/sync-registry.js; no financial arithmetic. */
 public final class SyncRegistry {
     private SyncRegistry() {}
-    private static final String[][] GROUPS={{"type","cycle","cycleUnit","start","first","maturity","autoRenew","renewalStop","tenureCount","tenureUnit"},{"ownership","ownerName"}};
+    private static final String[][] GROUPS={{"type","interestType","cycle","cycleUnit","start","first","maturity","autoRenew","renewalStop","tenureCount","tenureUnit"},{"ownership","ownerName"}};
     private static String escape(String value){return value.replace("~","~0").replace("/","~1");}
     private static String unescape(String value){return value.replace("~1","/").replace("~0","~");}
     private static List<String> keys(JSONObject value){List<String> keys=new ArrayList<>();Iterator<String> iterator=value.keys();while(iterator.hasNext())keys.add(iterator.next());Collections.sort(keys);return keys;}
@@ -82,8 +82,15 @@ public final class SyncRegistry {
             Object value=record.get("v");if(path[0].equals("p"))data.put(path[1],value);else if(path[0].equals("n"))reminders.put(path[1],value);else if(path.length==2)alive.put(key,Boolean.TRUE.equals(value));
             else {JSONObject target=path[0].equals("a")?assets:paid;if(!target.has(path[1]))target.put(path[1],new JSONObject());target.getJSONObject(path[1]).put(path[2],value);}
         }
-        JSONArray list=new JSONArray();Set<String> ids=new HashSet<>();for(String id:keys(assets))if(alive.optBoolean("a/"+escape(id))){list.put(assets.getJSONObject(id));ids.add(id);}
+        JSONArray list=new JSONArray();Set<String> ids=new HashSet<>();for(String id:keys(assets))if(alive.optBoolean("a/"+escape(id))){JSONObject asset=assets.getJSONObject(id);list.put(asset);ids.add(id);}
         JSONObject receipts=new JSONObject();for(String id:keys(paid))if(alive.optBoolean("r/"+escape(id))&&ids.contains(id.split(":",-1)[0]))receipts.put(id,paid.get(id));
-        return new JSONObject().put("format",DriveRepository.FORMAT).put("version",1).put("data",data.put("scope","all").put("assets",list).put("paid",receipts)).put("notificationSettings",reminders).put("sync",new JSONObject(doc.toString()));
+        data.put("scope","all").put("assets",list).put("paid",receipts);int reader=minimumReader(data);if(reader>=6)data.put("minReaderVersion",Math.max(reader,data.optInt("minReaderVersion",0)));
+        return new JSONObject().put("format",DriveRepository.FORMAT).put("version",1).put("data",data).put("notificationSettings",reminders).put("sync",new JSONObject(doc.toString()));
+    }
+    /** Compatibility follows live links and immutable receipt history, not a stale preference register. */
+    public static int minimumReader(JSONObject data)throws Exception{
+        int reader=1;JSONArray assets=data.getJSONArray("assets");for(int i=0;i<assets.length();i++){JSONObject asset=assets.getJSONObject(i);if(asset.has("bankAccountId"))return 7;if("compound".equals(asset.optString("interestType")))reader=6;}
+        JSONObject paid=data.getJSONObject("paid");for(String id:keys(paid)){JSONObject snapshot=paid.getJSONObject(id).optJSONObject("snapshot");if(snapshot!=null&&(snapshot.has("bankAccountId")||snapshot.has("bankAccountSnapshot")))return 7;}
+        return reader;
     }
 }

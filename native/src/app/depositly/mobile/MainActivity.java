@@ -2,12 +2,16 @@ package app.depositly.mobile;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.webkit.*;
+import android.widget.Toast;
 import app.depositly.mobile.cloud.DriveBackupBridge;
 import app.depositly.mobile.cloud.RegistryStorage;
 import app.depositly.mobile.reminders.ReminderBridge;
@@ -21,6 +25,12 @@ public class MainActivity extends Activity {
     private DriveBackupBridge cloud;
     private boolean pageReady;
     private String pendingImport;
+    private boolean backCheckPending;
+    private long backRequestGeneration;
+    private long queuedBackAt = -1;
+    private long lastRootBackAt = -1;
+    private Toast exitToast;
+    private static final long EXIT_BACK_WINDOW_MS = 2000;
     private static final int EXPORT = 10, IMPORT = 11;
 
     @Override public void onCreate(Bundle saved) {
@@ -104,6 +114,29 @@ public class MainActivity extends Activity {
         @JavascriptInterface public boolean save(String json) { return RegistryStorage.save(MainActivity.this,json,owner(),load()); }
         @JavascriptInterface public boolean saveForAccount(String json,String sub,String baseline) { return RegistryStorage.save(MainActivity.this,json,sub,baseline); }
         @JavascriptInterface public void setTheme(boolean dark) { runOnUiThread(() -> applySystemTheme(dark)); }
+        @JavascriptInterface public void copyText(String text) {
+            runOnUiThread(() -> {
+                try {
+                    ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                    if (clipboard == null || text == null || text.isEmpty()) {
+                        message("Could not copy. Please try again.");
+                        return;
+                    }
+                    clipboard.setPrimaryClip(ClipData.newPlainText("Bank Information", text));
+                    message("Copied to clipboard");
+                } catch (RuntimeException e) { message("Could not copy. Please try again."); }
+            });
+        }
+        @JavascriptInterface public void shareText(String text) {
+            if (text == null || text.trim().isEmpty()) return;
+            runOnUiThread(() -> {
+                try {
+                    Intent share = new Intent(Intent.ACTION_SEND).setType("text/plain")
+                        .putExtra(Intent.EXTRA_TEXT, text);
+                    startActivity(Intent.createChooser(share, "Share Bank Information"));
+                } catch (RuntimeException e) { message("Could not open sharing. Please try again."); }
+            });
+        }
         @JavascriptInterface public void backup(String json) { exportFile(json, "depositly-entries.json", "application/json"); }
         @JavascriptInterface public void exportFile(String data, String name, String mime) {
             try (OutputStream out = new FileOutputStream(exportCache())) { out.write(data.getBytes(StandardCharsets.UTF_8)); }
@@ -136,13 +169,51 @@ public class MainActivity extends Activity {
             }
         } catch (Exception e) { message("Could not read or save the file. Please try again."); }
     }
-    @Override public void onBackPressed() { web.evaluateJavascript("handleBack()", null); }
+    @Override public void onBackPressed() {
+        if (isFinishing() || isDestroyed()) return;
+        long pressedAt = SystemClock.elapsedRealtime();
+        if (backCheckPending) { queuedBackAt = pressedAt; return; }
+        checkBack(pressedAt);
+    }
+    private void checkBack(long pressedAt) {
+        if (!pageReady) { handleRootBack(pressedAt); return; }
+        backCheckPending = true;
+        long generation = ++backRequestGeneration;
+        web.evaluateJavascript("typeof handleBack === 'function' ? handleBack() : false", result -> {
+            if (generation != backRequestGeneration || isFinishing() || isDestroyed()) return;
+            backCheckPending = false;
+            if ("false".equals(result)) handleRootBack(pressedAt);
+            else resetExitBack();
+            long queuedAt = queuedBackAt;
+            queuedBackAt = -1;
+            if (queuedAt >= 0 && !isFinishing() && !isDestroyed()) checkBack(queuedAt);
+        });
+    }
+    private void handleRootBack(long pressedAt) {
+        if (lastRootBackAt >= 0 && pressedAt - lastRootBackAt <= EXIT_BACK_WINDOW_MS) {
+            resetExitBack();
+            finish();
+            return;
+        }
+        lastRootBackAt = pressedAt;
+        if (exitToast != null) exitToast.cancel();
+        exitToast = Toast.makeText(this, "Press back again to exit", Toast.LENGTH_SHORT);
+        exitToast.show();
+    }
+    private void resetExitBack() {
+        lastRootBackAt = -1;
+        if (exitToast != null) { exitToast.cancel(); exitToast = null; }
+    }
     @Override protected void onResume() {
         super.onResume();
         ReminderBridge.onResume(this, web);
         if (cloud != null) cloud.resume();
     }
     @Override protected void onPause() {
+        ++backRequestGeneration;
+        backCheckPending = false;
+        queuedBackAt = -1;
+        resetExitBack();
         if (cloud != null) cloud.pause();
         super.onPause();
     }
