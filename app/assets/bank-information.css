@@ -67,3 +67,32 @@ body[data-page="BankInformation"] .bank-account-layout-grid .bank-grid-actions b
 .bank-account-empty .primary{display:inline-flex;align-items:center;gap:8px;justify-content:center;min-height:48px}
 .bank-account-empty .primary svg{width:18px;height:18px}
 @media(max-width:350px){.bank-account-toolbar{gap:8px}.bank-account-toolbar .bank-view-options button{padding:8px;font-size:11px}.bank-account-toolbar .bank-view-options svg{width:15px;height:15px}body[data-page="BankInformation"] .bank-account-card{padding:14px}body[data-page="BankInformation"] .bank-account-layout-grid .bank-group-accounts{grid-template-columns:1fr}}
+
+/* Shared tracks keep each account field aligned when names or types wrap. */
+body[data-page="BankInformation"] .bank-group-heading{align-items:center}
+body[data-page="BankInformation"] .bank-account-top{min-width:0}
+body[data-page="BankInformation"] .bank-account-type{line-height:1.5;margin-top:7px}
+.bank-account-footer{display:flex;flex-direction:column;gap:8px;margin-top:14px;min-width:0}
+body[data-page="BankInformation"] .bank-account-footer .bank-account-actions{margin-top:auto;padding-top:12px}
+body[data-page="BankInformation"] .bank-account-footer .bank-linked-deposits{margin:0;padding:5px 0;width:100%;min-height:40px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-group-accounts{align-items:stretch;column-gap:12px;row-gap:14px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card{display:grid;grid-row:span 5;grid-template-rows:subgrid;padding:14px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-top{grid-row:1;align-items:flex-start;gap:4px;margin:0}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-holder h4{font-size:13px;line-height:1.5}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-more-button{margin:-6px -7px 0 0;flex:0 0 44px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .bank-account-details{grid-row:2 / span 3;grid-template-columns:minmax(0,1fr);grid-template-rows:subgrid;row-gap:14px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .bank-account-details>div{grid-column:1;align-self:stretch}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card [data-bank-field="accountNumber"]{padding:11px;border-radius:12px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .bank-number-detail dt{min-height:34px;padding-right:32px;line-height:1.5}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .bank-number-value{font-size:13px;line-height:1.6;letter-spacing:0}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card [data-bank-field="accountNumber"] .bank-copy-button{top:3px;right:1px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card [data-bank-field="routingNumber"] .bank-copy-button{top:-7px;right:-8px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card [data-bank-field="branchName"] dd{line-height:1.6;margin-top:6px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-footer{grid-row:5;margin:0}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-grid-actions button{justify-content:flex-start}
+@supports not (grid-template-rows:subgrid){
+ body[data-page="BankInformation"] .bank-account-layout-grid .bank-group-accounts{grid-template-columns:1fr}
+ body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card{display:block;grid-row:auto}
+ body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .bank-account-details{grid-template-rows:auto;gap:14px}
+ body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-footer{margin-top:14px}
+}

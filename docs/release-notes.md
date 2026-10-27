@@ -1,5 +1,8 @@
-Depositly 1.2 Build 12
+Depositly 1.2 Build 13
 
+- Deposits remembers the last selected Card or Grid view across navigation and restarts. Removed the separate Default deposit view setting.
+- Aligned Bank grid headers, account details and actions across neighboring cards, including wrapped account types and branch names. Improved spacing and copy-button placement, with a single-column fallback for older WebViews.
+- Restored the original flat Build 9 logo colors, sizing and styling.
 - Imported the supplied Build 11 visual redesign, including the emerald light/dark theme, revised controls, and simplified Home, Calendar and Settings layouts.
 - Bundled the packaged styles into the phone's loaded document so the redesign renders offline with remote requests still blocked.
 - Kept the existing interest calculations, backup format, account links and recorded receipt history.

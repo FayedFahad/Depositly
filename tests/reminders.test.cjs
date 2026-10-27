@@ -20,7 +20,7 @@ assert.equal(plan.find(p=>p.date==='2026-12-13').count,2,'Maturity combines inte
 assert(plan.every(p=>p.date>='2026-10-13'));
 const firstUpload=uploads;run('syncReminderPlan()');assert.equal(uploads,firstUpload,'Unchanged data avoids rescheduling');
 run("go('Settings')");
-for(const label of ['Appearance','Currency & numbers','Notifications','Data management','Import, export & backup','Default deposit view','Made by Greenstone Solutions LLC'])assert(screen().includes(label),label);
+for(const label of ['Appearance','Currency & numbers','Notifications','Data management','Import, export & backup','Made by Greenstone Solutions LLC'])assert(screen().includes(label),label);
 assert.doesNotMatch(screen(),/biometric|\bPIN\b/i);
 assert.match(screen(),/role="switch" aria-label="Payout reminders" aria-checked="false"/);
 run('togglePayoutReminders()');assert.equal(status.enabled,true);
