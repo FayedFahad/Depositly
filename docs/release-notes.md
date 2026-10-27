@@ -1,6 +1,7 @@
-Depositly 1.2 Build 14
+Depositly 1.2 Build 15
 
-- Fixed Custom tenure snapping back to the 100-day preset. Custom fields stay editable, and switching presets refreshes their starting values so previous hidden terms cannot override the selection.
+- Tenure and Payout Cycle now work independently. Either field can use a preset or Custom without changing the other field or enabling renewal.
+- Saving, reopening, CSV/JSON backups and sync preserve explicitly chosen terms, including 100-day tenures with shorter payouts and 100-day payouts with longer tenures.
 - Used the supplied logo image for the Android launcher and offline in-app header.
 - Deposits remembers the last selected Card or Grid view across navigation and restarts. Removed the separate Default deposit view setting.
 - Aligned Bank grid headers, account details and actions across neighboring cards, including wrapped account types and branch names. Improved spacing and copy-button placement, with a single-column fallback for older WebViews.
