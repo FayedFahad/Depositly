@@ -43,6 +43,12 @@ public final class ReminderBridge {
             return true;
         } catch (Exception e) { return false; }
     }
+    @JavascriptInterface public boolean restoreSettings(String data) {
+        try {
+            ReminderEngine.restoreSettings(activity, new JSONObject(data));
+            return true;
+        } catch (Exception e) { return false; }
+    }
     @JavascriptInterface public void testNotification() {
         activity.runOnUiThread(() -> {
             if (ReminderEngine.allowed(activity)) ReminderEngine.test(activity);

@@ -1,6 +1,6 @@
 # Google account and Drive backup
 
-Depositly 1.2 Build 15 uses Google's Android AuthorizationClient for account selection and consent. It requests `openid`, profile/email and the limited `drive.appdata` scope. OAuth tokens stay in native memory and Google's token cache; they are not sent to the WebView, stored in Depositly preferences, or included in exports. There is no backend server and no embedded client secret.
+Depositly 1.3.1 uses Google's Android AuthorizationClient for account selection and consent. It requests `openid`, profile/email and the limited `drive.appdata` scope. OAuth tokens stay in native memory and Google's token cache; they are not sent to the WebView, stored in Depositly preferences, or included in exports. There is no backend server and no embedded client secret.
 
 ## Google Cloud setup
 
@@ -17,7 +17,7 @@ These Cloud Console settings could not be inspected from this workspace; there i
 
 ## Using the feature
 
-Open **Settings → Account & backup → Connect Google account**, select the same account used on the website, and allow Drive access. The latest registry applies automatically. Normal edits synchronize quietly without backup review dialogs. JSON/CSV file imports keep their explicit review screen.
+Open **Settings → Account & backup → Connect Google account**, select the same account used on the website, and allow Drive access. The latest registry applies automatically. Normal edits synchronize quietly without backup review dialogs. CSV file imports keep their explicit review screen. Local backups download as separate Deposits and Bank Information CSV files containing named field columns; see [CSV backup details](csv-backup.md).
 
 The shared registry contains Self and Others investments, receipt history and snapshots, currency, number format, theme, default deposit view, and reminder time/enabled preferences. Notification permission remains controlled by Android; automatic sync never opens a notification-permission prompt. Credentials and generated reminder plans are excluded.
 

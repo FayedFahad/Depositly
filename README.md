@@ -1,10 +1,10 @@
 # Depositly
 
-Personal FDR and National Savings Certificate tracker by **Greenstone Solutions LLC**. Current application version: **1.2 Build 15**.
+Personal FDR and National Savings Certificate tracker by **Greenstone Solutions LLC**. Current application version: **1.3.1**.
 
 Connect Google in **Settings → Account & backup** to synchronize saved edits automatically with the website and other devices using the same account. Dated versions remain available for explicit restore in **Backup versions**. See [Google Cloud setup and backup behavior](docs/google-drive.md) before testing sign-in.
 
-Open the **Bank** bottom tab to save bank accounts, edit their details, or share an account as text on the Bank Information page. The hamburger menu also keeps this shortcut. Account and routing numbers retain leading zeros. Full JSON and Google backups include saved accounts; investment CSV and selected-deposit exports exclude their full details. Press Back twice within two seconds on Home to exit the Android app.
+Open the **Bank** bottom tab to save bank accounts, edit their details, or share an account as text on the Bank Information page. The hamburger menu also keeps this shortcut. Account and routing numbers retain leading zeros. Separate Deposits and Bank Information CSV files together include every saved account, deposit and receipt. Each file has named field headers and restores its own records. Google backups also include both categories. Local backup downloads use CSV only. Press Back twice within two seconds on Home to exit the Android app.
 
 Bank accounts are grouped by institution, with prominent account numbers, holder names, optional account-type labels and bank logos. Choose **Cards** or **Grid**; the app remembers the selected bank layout. Tap the copy icon beside an account or routing number to copy its exact value, including in the edit form. Both layouts offer sharing, while Grid's options button opens editing and deletion. A previously selected Compact view opens as Cards.
 
@@ -14,7 +14,7 @@ Each FDR or savings certificate can optionally link to any saved interest-receiv
 
 New payment receipts retain the receiving bank, holder and account number as recorded, so later relinking or bank edits do not rewrite history. Marking a payment received needs only the amount and optional note; payment lists and filters use scheduled dates. Existing internal receipt dates remain preserved.
 
-Linked deposits and recorded receiving-account identities require backup reader version 7, supported by the updated phone app and website. Full JSON and Google backups preserve these details. Deposit-only JSON and CSV keep account ID references without exporting full bank details; older clients reject linked exports until updated. Unlinked compound deposits retain reader version 6 compatibility, and legacy simple-interest backups remain readable. Existing receipts retain their original dates and amounts when affected 100-day schedules are repaired.
+Linked deposits and recorded receiving-account identities require backup reader version 7, supported by the updated phone app and website. The separate CSV backups and Google backups preserve these details, including saved bank accounts and historical receiving-account identities. The Deposits CSV includes receipts and their historical account identities; the Bank Information CSV holds saved bank accounts. Older investment-only CSV files remain importable without removing saved bank accounts. Unlinked compound deposits retain reader version 6 compatibility, and legacy simple-interest backups remain readable. Existing receipts retain their original dates and amounts when affected 100-day schedules are repaired.
 
 Home shows the forecast period selector and estimated net interest, gross interest and TDS above **Coming up next**. Choose 1 month, 3 months, 6 months or 1 year; changing the period keeps your place on Home. The forecast uses current invested balances and rates. Selecting a bank leaves Investment Name for manual input.
 
@@ -40,7 +40,9 @@ The repository contains the current app source and an automatic signed APK build
 
 The HTML is the source of truth. The Android wrapper, Google authorization library and notifications are built together with Gradle. The build does not require an older APK or decompiled smali. `app/apktool.yml` is retained as the version configuration used by the build and release scripts.
 
-The Build 11 APK's recovered interface is integrated with its `app/assets/redesign.css` theme. `AppDocument` includes the packaged styles inside the loaded HTML, retaining stylesheet order and offline rendering while the WebView continues to block remote subresources. Financial calculations and backup contracts are unchanged.
+See [CSV backup format and restore behavior](docs/csv-backup.md) for the complete portable backup contract.
+
+The Build 11 APK's recovered interface is integrated with its `app/assets/redesign.css` theme. `AppDocument` includes the packaged styles inside the loaded HTML, retaining stylesheet order and offline rendering while the WebView continues to block remote subresources. Financial calculations remain unchanged. Local backup exports now use separate CSV files with field headers.
 
 Local drafts, test fixtures, downloaded Gradle tools, build caches and intermediate APKs use `Z:\WORK DIRECTORY\Depositly`. Set `DEPOSITLY_WORK_DIRECTORY` to override the parent directory. CI uses its runner temporary directory; other machines fall back to their system temporary directory. Final APKs and release metadata are written to `dist/`.
 
@@ -64,9 +66,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
 ```
 
-The signed result is `dist/Depositly-1.2-build-15.apk`. Local signing files belong at `private/signing/depositly.p12` and `private/signing/password.txt`. A fresh clone can run `scripts/build.ps1 -Unsigned` without them.
+The signed result is `dist/Depositly-1.3.1.apk`. Local signing files belong at `private/signing/depositly.p12` and `private/signing/password.txt`. A fresh clone can run `scripts/build.ps1 -Unsigned` without them.
 
 See [GitHub signing and release setup](docs/github.md) and [development notes](docs/development.md).
 
-The financial conventions include a 360-day interest year for day cycles, month fractions for calendar cycles, custom day/month terms, net-interest capitalization at compound renewal maturity, TDS, instrument-only CSV, full JSON backups, Self-only totals and separate Others calendar payments. Notification timing follows Android alarm and permission rules; device testing is needed for delivery behavior.
+The financial conventions include a 360-day interest year for day cycles, month fractions for calendar cycles, custom day/month terms, net-interest capitalization at compound renewal maturity, TDS, separate Deposits and Bank Information CSV backups, Self-only totals and separate Others calendar payments. Notification timing follows Android alarm and permission rules; device testing is needed for delivery behavior.
 

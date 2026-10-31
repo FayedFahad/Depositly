@@ -2,6 +2,10 @@
 
 Use `Z:\WORK DIRECTORY` for drafts, previews, temporary files, downloaded tools and build caches. Keep the repository focused on app source, build/release configuration, tests and required signing files. Local build scripts use `Z:\WORK DIRECTORY\Depositly`; CI uses its runner temporary directory.
 
+# GitHub synchronization
+
+After every completed edit or requested update, run the relevant checks, commit the changes and push the current branch to its configured GitHub remote automatically. This is standing user authorization; do not ask for confirmation each time. Keep credentials, local build artifacts and temporary files out of commits. Preserve unrelated work, use normal pushes and report any failure to synchronize.
+
 # App release versions
 
 Every requested update to the phone app must have a new visible version and a higher Android version code. Increment `Build N` for each completed app update (for example, `1.2 Build 2` → `1.2 Build 3`), unless the user requests another version scheme. Do not change only the internal version code.

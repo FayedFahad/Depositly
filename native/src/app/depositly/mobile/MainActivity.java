@@ -140,7 +140,6 @@ public class MainActivity extends Activity {
                 } catch (RuntimeException e) { message("Could not open sharing. Please try again."); }
             });
         }
-        @JavascriptInterface public void backup(String json) { exportFile(json, "depositly-entries.json", "application/json"); }
         @JavascriptInterface public void exportFile(String data, String name, String mime) {
             try (OutputStream out = new FileOutputStream(exportCache())) { out.write(data.getBytes(StandardCharsets.UTF_8)); }
             catch (IOException e) { message("Could not prepare export. Please try again."); return; }
@@ -149,7 +148,8 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void restore() {
             runOnUiThread(() -> startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT)
-                .addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"), IMPORT));
+                .addCategory(Intent.CATEGORY_OPENABLE).setType("*/*")
+                .putExtra(Intent.EXTRA_TITLE, "Choose CSV backup"), IMPORT));
         }
     }
     @Override protected void onActivityResult(int request, int result, Intent data) {
