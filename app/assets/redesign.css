@@ -327,3 +327,12 @@ dialog .row>button[aria-label^=Close]:focus-visible{box-shadow:var(--ring)}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
 
 @media(max-width:340px){.calendar .day-amount{font-size:8.5px;letter-spacing:-.6px}.calendar{gap:1px}}
+/* Keep the balance card and the original breakdown row height unchanged. */
+.hero.current-balance .stats.balance-breakdown{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:8px}
+.hero.current-balance .balance-breakdown>div{min-width:0;container-type:inline-size}
+.hero.current-balance .balance-breakdown>div:nth-child(2){text-align:center}
+.hero.current-balance .balance-breakdown>div:last-child{text-align:right}
+.hero.current-balance .balance-breakdown .sub{font-size:clamp(8px,2.6vw,12px);line-height:16.8px;white-space:nowrap}
+.hero.current-balance .balance-breakdown b{display:block;font-size:clamp(6px,calc((100vw - 116px) / var(--balance-chars,10) * .5),18px);line-height:27.9px;white-space:nowrap;font-variant-numeric:tabular-nums}
+@supports(font-size:1cqi){.hero.current-balance .balance-breakdown .sub{font-size:clamp(8px,10.5cqi,12px)}.hero.current-balance .balance-breakdown b{font-size:clamp(6px,calc(160cqi / var(--balance-chars,10)),18px)}}
+.allocation-bar>span:nth-child(3),.allocation-legend>div:nth-child(3) i{background:var(--muted)}

@@ -76,11 +76,11 @@ body[data-page="BankInformation"] .bank-account-type{line-height:1.5;margin-top:
 body[data-page="BankInformation"] .bank-account-footer .bank-account-actions{margin-top:auto;padding-top:12px}
 body[data-page="BankInformation"] .bank-account-footer .bank-linked-deposits{margin:0;padding:5px 0;width:100%;min-height:40px}
 body[data-page="BankInformation"] .bank-account-layout-grid .bank-group-accounts{align-items:stretch;column-gap:12px;row-gap:14px}
-body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card{display:grid;grid-row:span 5;grid-template-rows:subgrid;padding:14px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card{display:grid;grid-row:span 6;grid-template-rows:subgrid;padding:14px}
 body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-top{grid-row:1;align-items:flex-start;gap:4px;margin:0}
 body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-holder h4{font-size:13px;line-height:1.5}
 body[data-page="BankInformation"] .bank-account-layout-grid .bank-more-button{margin:-6px -7px 0 0;flex:0 0 44px}
-body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .bank-account-details{grid-row:2 / span 3;grid-template-columns:minmax(0,1fr);grid-template-rows:subgrid;row-gap:14px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .bank-account-details{grid-row:2 / span 4;grid-template-columns:minmax(0,1fr);grid-template-rows:subgrid;row-gap:14px}
 body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .bank-account-details>div{grid-column:1;align-self:stretch}
 body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card [data-bank-field="accountNumber"]{padding:11px;border-radius:12px}
 body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .bank-number-detail dt{min-height:34px;padding-right:32px;line-height:1.5}
@@ -88,7 +88,7 @@ body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .
 body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card [data-bank-field="accountNumber"] .bank-copy-button{top:3px;right:1px}
 body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card [data-bank-field="routingNumber"] .bank-copy-button{top:-7px;right:-8px}
 body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card [data-bank-field="branchName"] dd{line-height:1.6;margin-top:6px}
-body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-footer{grid-row:5;margin:0}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-footer{grid-row:6;margin:0}
 body[data-page="BankInformation"] .bank-account-layout-grid .bank-grid-actions button{justify-content:flex-start}
 @supports not (grid-template-rows:subgrid){
  body[data-page="BankInformation"] .bank-account-layout-grid .bank-group-accounts{grid-template-columns:1fr}
@@ -96,3 +96,14 @@ body[data-page="BankInformation"] .bank-account-layout-grid .bank-grid-actions b
  body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card .bank-account-details{grid-template-rows:auto;gap:14px}
  body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-footer{margin-top:14px}
 }
+
+/* Balances keep the existing account fields and actions aligned. */
+.bank-account-details>[data-bank-field="balance"]{grid-column:1/-1}
+.bank-account-details>[data-bank-field="balance"] dd{display:flex;justify-content:space-between;align-items:center;gap:12px;min-width:0}
+.bank-balance-value{font-variant-numeric:tabular-nums;overflow-wrap:anywhere;font-weight:750;font-size:18px;color:var(--text)}
+.bank-balance-update{min-height:44px;padding:8px 10px;font-size:12px;flex:none;background:transparent;color:var(--brand)}
+.bank-balance-help{font-size:12px;line-height:1.5;margin:8px 0 18px}
+body[data-page="BankInformation"] .bank-account-card [data-bank-field="balance"] dd{margin-top:2px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-account-card [data-bank-field="balance"] dd{flex-wrap:wrap;gap:0 8px}
+body[data-page="BankInformation"] .bank-account-layout-grid .bank-balance-value{font-size:15px}
+.bank-balance-update:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
