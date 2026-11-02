@@ -1,12 +1,14 @@
 # Depositly
 
-Personal FDR and National Savings Certificate tracker by **Greenstone Solutions LLC**. Current application version: **1.3.1 Build 1**.
+Personal FDR and National Savings Certificate tracker by **Greenstone Solutions LLC**. Current application version: **1.3.1 Build 2**.
 
 Connect Google in **Settings → Account & backup** to synchronize saved edits automatically with the website and other devices using the same account. Dated versions remain available for explicit restore in **Backup versions**. See [Google Cloud setup and backup behavior](docs/google-drive.md) before testing sign-in.
 
 Open the **Bank** bottom tab to save bank accounts, edit their details, or share an account as text on the Bank Information page. The hamburger menu also keeps this shortcut. Account and routing numbers retain leading zeros. Separate Deposits and Bank Information CSV files together include every saved account, deposit and receipt. Each file has named field headers and restores its own records. Google backups also include both categories. Local backup downloads use CSV only. Press Back twice within two seconds on Home to exit the Android app.
 
 Bank accounts are grouped by institution, with prominent account numbers, holder names, optional account-type labels and bank logos. Choose **Cards** or **Grid**; the app remembers the selected bank layout. Tap the copy icon beside an account or routing number to copy its exact value, including in the edit form. Both layouts offer sharing, while Grid's options button opens editing and deletion. A previously selected Compact view opens as Cards.
+
+The bank icon row above **Cards** and **Grid** includes only banks with saved accounts. Tap a bank icon to show only its accounts in either layout, or **All banks** to clear the filter. The selection stays while changing layouts or navigating, resets when switching accounts or reopening the app, and clears if the selected bank no longer has saved accounts.
 
 Bank accounts have a manually maintained **Current balance**, entered when adding or editing an account or through its **Update** action. Home includes these amounts in your current balance and shows **Fixed deposits**, **Savings certificates** and **Bank** across the existing horizontal breakdown. The card's padding, main balance, investment button and footer remain unchanged. Existing accounts contribute zero until a balance is entered. Recording a deposit payment does not automatically credit a bank balance, and interest forecasts continue to use deposits only. Bank Information CSV and Google backups preserve balances; sharing account details does not include them.
 
@@ -68,7 +70,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
 ```
 
-The signed result is `dist/Depositly-1.3.1-build-1.apk`. Local signing files belong at `private/signing/depositly.p12` and `private/signing/password.txt`. A fresh clone can run `scripts/build.ps1 -Unsigned` without them.
+The signed result is `dist/Depositly-1.3.1-build-2.apk`. Local signing files belong at `private/signing/depositly.p12` and `private/signing/password.txt`. A fresh clone can run `scripts/build.ps1 -Unsigned` without them.
 
 See [GitHub signing and release setup](docs/github.md) and [development notes](docs/development.md).
 

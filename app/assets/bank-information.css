@@ -4,6 +4,14 @@ body[data-page="BankInformation"] .bank-account-heading h2{font-size:clamp(25px,
 body[data-page="BankInformation"] .bank-account-heading .sub{font-size:13px;line-height:1.5;margin:0;max-width:25ch}
 body[data-page="BankInformation"] .bank-add-button{display:inline-flex;align-items:center;gap:5px;justify-content:center;padding:9px 13px;min-height:44px;flex-shrink:0}
 body[data-page="BankInformation"] .bank-add-button svg{width:18px;height:18px}
+.bank-filter-options{display:flex;align-items:center;gap:10px;max-width:100%;overflow-x:auto;padding:5px 5px 10px;margin:-5px -5px 14px}
+.bank-filter-options button{display:inline-flex;flex:none;align-items:center;justify-content:center;min-width:52px;height:52px;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.bank-filter-options button:hover{border-color:var(--brand);background:var(--soft)}
+.bank-filter-options button[aria-pressed="true"]{border:2px solid var(--brand);background:var(--soft);color:var(--brand)}
+.bank-filter-options button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.bank-filter-options .bank-filter-all{padding:0 14px;font-size:13px;font-weight:700;white-space:nowrap}
+.bank-filter-logo{display:flex;align-items:center;justify-content:center;width:38px;height:38px;padding:6px;border-radius:7px;background:#fff;color:#1e293b}
+.bank-filter-logo svg{width:100%;height:100%}
 .bank-account-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 20px;margin-bottom:2px}
 .bank-account-total{display:block;flex:1;min-width:0;font-size:14px;font-weight:750;font-variant-numeric:tabular-nums}
 .bank-account-total>span{display:block;margin-top:3px;font-size:12px;font-weight:450;color:var(--muted)}
