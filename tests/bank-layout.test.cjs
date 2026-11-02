@@ -2,6 +2,9 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
 const source=process.env.DEPOSITLY_ANDROID_SOURCE||path.join(__dirname,'../app/assets/index.html');
 const equal=(a,b,message)=>assert.deepEqual(JSON.parse(JSON.stringify(a)),b,message);
 const asset={id:'deposit',type:'FDR',name:'Savings',ownership:'self',ownerName:'Me',principal:100000,rate:10,tds:10,cycle:1,cycleUnit:'months',start:'2026-01-01',first:'2026-02-01',maturity:'2027-01-01'};
+const bankIconKeys=screen=>(screen.match(/<button\b[^>]*>/g)||[]).filter(button=>button.includes('setBankInformationBank(')).map(button=>button.match(/data-bank="([^"]*)"/)?.[1]).filter(Boolean).map(key=>key.replace(/&quot;/g,'"').replace(/&amp;/g,'&'));
+const bankGroupKeys=screen=>[...screen.matchAll(/data-bank-group="([^"]*)"/g)].map(([,key])=>key.replace(/&quot;/g,'"').replace(/&amp;/g,'&'));
+function numberedBankCSV(T,banks,ranks={}){return T.csv([[...T.BANK_COLUMNS,'Bank order'],...banks.map(bank=>[bank.id,bank.bankId,bank.bankName,bank.accountTitle,bank.accountNumber,bank.branchName,bank.routingNumber,bank.accountType,bank.balance===undefined?'':bank.balance/100,'grid',banks.length,'BDT',2,ranks[bank.id]??''])]);}
 function app(initial={version:2,assets:[],paid:{},dark:false,currency:'BDT'}){
  const html=fs.readFileSync(source,'utf8'),nodes=new Map(),copied=[],browserCopied=[],fallbackCopied=[];
  let saved=JSON.stringify(initial),saveOK=true,selectedNode=null,vaultOwner='account',saveCalls=0;
@@ -10,7 +13,7 @@ function app(initial={version:2,assets:[],paid:{},dark:false,currency:'BDT'}){
  class FormData{constructor(form){this.values=Object.entries(form.values||{});}[Symbol.iterator](){return this.values[Symbol.iterator]();}}
  const context={console,Date,Math,JSON,Number,String,Set,Map,Array,Object,Error,Blob,URL,FormData,setTimeout:()=>0,confirm:()=>true,scrollTo(){},document:{getElementById:get,querySelector:get,createElement:node,execCommand(command){if(command!=='copy'||!selectedNode)return false;fallbackCopied.push(selectedNode.value);return true;},body:{dataset:{},classList:{toggle(){}},appendChild(){},removeChild(){}}},localStorage:{getItem(){throw Error('Android DOM storage disabled');},setItem(){throw Error('Android DOM storage disabled');}},Vault:{load:()=>saved,owner:()=>vaultOwner,saveForAccount:(text,sub)=>{saveCalls++;if(!saveOK||sub!==vaultOwner)return false;saved=text;return true;},copyText:text=>{copied.push(text);return true;}}};
  context.window=context;vm.createContext(context);for(const script of html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g))vm.runInContext(script[1],context);
- return {run:code=>vm.runInContext(code,context),get,context,copied,browserCopied,fallbackCopied,setSaveOK:value=>saveOK=value,get saved(){return JSON.parse(saved);},get saveCalls(){return saveCalls;},switchVault(next,sub='other-account'){saved=JSON.stringify(next);vaultOwner=sub;context.onRegistryChanged(sub);},useBrowserClipboard(){delete context.Vault.copyText;context.navigator={clipboard:{writeText:async text=>browserCopied.push(text)}};},useLegacyClipboard(){delete context.Vault.copyText;delete context.navigator;}};
+ return {run:code=>vm.runInContext(code,context),get,context,copied,browserCopied,fallbackCopied,setSaveOK:value=>saveOK=value,get saved(){return JSON.parse(saved);},get saveCalls(){return saveCalls;},switchVault(next,sub='other-account',notify=true){saved=JSON.stringify(next);vaultOwner=sub;if(notify)context.onRegistryChanged(sub);},useBrowserClipboard(){delete context.Vault.copyText;context.navigator={clipboard:{writeText:async text=>browserCopied.push(text)}};},useLegacyClipboard(){delete context.Vault.copyText;delete context.navigator;}};
 }
 function assertView(screen,view,count){
  assert.match(screen,new RegExp('\\bbank-account-layout-'+view+'\\b'));
@@ -105,5 +108,40 @@ function assertView(screen,view,count){
  const decode=value=>value.replace(/&(quot|amp|lt|gt|#39);/g,(_,entity)=>({quot:'"',amp:'&',lt:'<',gt:'>','#39':"'"}[entity]));
  quoted.context.filterTarget={dataset:{bank:decode(quotedButton.match(/data-bank="([^"]*)"/)[1]),vaultSub:decode(quotedButton.match(/data-vault-sub="([^"]*)"/)[1])}};
  quoted.run('(function(){'+decode(quotedButton.match(/onclick="([^"]*)"/)[1])+'}).call(filterTarget)');assert.equal(quoted.run('selectedBankInformationBank'),quoted.run('groupedBankAccounts()[0].key'),'The rendered filter handler selects a custom bank whose name contains quotes');assertView(quoted.get('main').innerHTML,'card',1);
- console.log('PASS: bank grouping and aliases, bank icon filters in both layouts, transient selection and account isolation, card/grid persistence and failures, exact copying, and JSON/CSV preference preservation.');
+ const orderBanks=[{...base,id:'order-ab',accountTitle:'AB Holder',branchName:'Main'},{...base,id:'order-alias',bankId:'',bankName:'AB BANK LIMITED',accountTitle:'Legacy holder',branchName:'Main'},{...base,id:'order-city',bankId:'city-bank-plc',bankName:'City Bank PLC',accountTitle:'City holder',branchName:'Main'},{...base,id:'order-unknown',bankId:'',bankName:'River "Sample" Bank',accountTitle:'Custom holder',branchName:'Main'}];
+ const customOrder=['bank:city-bank-plc','bank:ab-bank-plc'],allOrdered=[...customOrder,'name:river "sample" bank'];
+ for(const mode of ['replace','merge']){
+  const ordered=app({...a.saved,bankAccounts:orderBanks,bankInformationView:'card'}),T=ordered.context.Transfer;
+  ordered.context.rankedCSV=numberedBankCSV(T,orderBanks,{'order-ab':2,'order-alias':2,'order-city':1});ordered.context.blankCSV=numberedBankCSV(T,orderBanks);
+  ordered.run("restoreData(blankCSV);applyImport('replace');go('BankInformation')");const orderBaseline=ordered.saved;
+  ordered.run("setBankInformationBank('bank:ab-bank-plc');restoreData(rankedCSV);applyImport('"+mode+"')");
+  equal(ordered.saved.bankInformationOrder,customOrder,mode+' applies custom bank ranks');
+  equal(ordered.saved.bankAccounts,orderBaseline.bankAccounts,'Applying bank ranks does not edit saved account values');equal(ordered.saved.assets,orderBaseline.assets,'Bank order imports keep deposits');equal(ordered.saved.paid,orderBaseline.paid,'Bank order imports keep receipts');
+  equal(bankIconKeys(ordered.get('main').innerHTML),allOrdered,'Icons use custom rank order, followed by unranked banks alphabetically');equal(bankGroupKeys(ordered.get('main').innerHTML),['bank:ab-bank-plc'],'Ordering preserves the selected bank filter');
+  ordered.run("setBankInformationBank('')");
+  for(const view of ['card','grid']){ordered.run("setBankInformationView('"+view+"')");equal(bankGroupKeys(ordered.get('main').innerHTML),allOrdered,'Custom bank order applies to '+view+' groups');equal(bankIconKeys(ordered.get('main').innerHTML),allOrdered);assertView(ordered.get('main').innerHTML,view,orderBanks.length);}
+  const reopened=app(ordered.saved);reopened.run("go('BankInformation')");equal(bankGroupKeys(reopened.get('main').innerHTML),allOrdered,'Custom order survives an app restart');
+  ordered.run("globalThis.rankedJSON=JSON.stringify(Transfer.exportData(state));commit({...state,bankInformationOrder:[]});restoreData(rankedJSON);applyImport('replace')");equal(ordered.saved.bankInformationOrder,customOrder,'Full JSON restores custom bank order');
+  const selected=ordered.run('Transfer.exportData(state,[state.assets[0].id])');assert(!Object.hasOwn(selected,'bankInformationOrder'),'Selected-deposit exports do not disclose the private bank directory order');assert(!Object.hasOwn(selected,'bankAccounts'));
+  ordered.run("restoreData(Transfer.bankAccountsCSV(state));applyImport('replace')");equal(ordered.saved.bankInformationOrder,customOrder,'Older bank CSV without a Bank order column preserves saved order');
+  ordered.run("restoreData(Transfer.depositsCSV(state));applyImport('replace')");equal(ordered.saved.bankInformationOrder,customOrder,'Deposit-only restore preserves bank ordering');
+  const S=require('../app/assets/sync-registry.js'),backup={format:'depositly-google-drive',version:1,data:ordered.run('Transfer.exportData(state)'),notificationSettings:{enabled:false,time:'09:00'}},cloud=S.backup(S.create(backup,'native-bank-order',1));
+  equal(cloud.data.bankInformationOrder,customOrder,'Google registry snapshots preserve bank ordering');const fromCloud=app(cloud.data);fromCloud.run("go('BankInformation')");equal(bankGroupKeys(fromCloud.get('main').innerHTML),allOrdered,'Opening a synced snapshot uses saved bank ranks');
+  ordered.run("restoreData(blankCSV);applyImport('merge')");equal(ordered.saved.bankInformationOrder,[],'An explicitly blank order column clears custom order during merge');equal(bankGroupKeys(ordered.get('main').innerHTML),['bank:ab-bank-plc','bank:city-bank-plc','name:river "sample" bank']);
+  ordered.run("restoreData(rankedCSV);applyImport('merge')");ordered.switchVault({...ordered.saved,bankAccounts:[{...orderBanks[0],id:'other-order-ab'}],bankInformationOrder:['bank:ab-bank-plc']});
+  equal(bankIconKeys(ordered.get('main').innerHTML),['bank:ab-bank-plc'],'Changing native accounts uses only the new account’s bank order');equal(ordered.saved.bankInformationOrder,['bank:ab-bank-plc']);
+ }
+ for(const mode of ['merge','replace'])for(const notify of [true,false]){
+  const scoped=app({...a.saved,bankAccounts:orderBanks,bankInformationOrder:customOrder});
+  scoped.context.rankedCSV=numberedBankCSV(scoped.context.Transfer,orderBanks,{'order-ab':2,'order-alias':2,'order-city':1});scoped.run("go('BankInformation');restoreData(rankedCSV)");
+  assert(scoped.get('modal').open,'The original account has a visible rank import review');assert(scoped.run('pendingImport')!==null);assert.equal(scoped.run('pendingImportVaultSub'),'account');
+  scoped.switchVault({...scoped.saved,assets:[{...asset,id:'other-account-deposit',name:'Other account deposit'}],paid:{},bankAccounts:[{...orderBanks[0],id:'other-account-bank',accountTitle:'Other account holder'}],bankInformationOrder:['bank:ab-bank-plc']},'other-account',notify);
+  const beforeOther=JSON.stringify(scoped.saved),beforeSaves=scoped.saveCalls;
+  if(notify){assert.equal(scoped.run('pendingImport'),null,'A verified account change clears the previous account’s pending CSV');assert.equal(scoped.run('pendingImportVaultSub'),null);}
+  scoped.run("applyImport('"+mode+"')");
+  assert.equal(JSON.stringify(scoped.saved),beforeOther,'A stale '+mode+' action cannot import the previous account’s records or ranks'+(notify?' after the registry event':' before the registry event'));
+  assert.equal(scoped.saveCalls,beforeSaves,'A stale CSV action never reaches the save bridge');assert.equal(scoped.run('pendingImport'),null);assert.equal(scoped.run('pendingImportVaultSub'),null);assert.equal(scoped.get('modal').open,false);
+  if(!notify)assert.match(scoped.get('toast').textContent,/account changed/,'Native-owner mismatch is rejected even before the registry event arrives');
+ }
+ console.log('PASS: bank grouping and aliases, bank icon filters in both layouts, transient selection and account isolation, numbered CSV bank ordering and backup/privacy persistence, card/grid persistence and failures, exact copying, and JSON/CSV preference preservation.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

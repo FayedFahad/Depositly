@@ -1,4 +1,7 @@
-Depositly 1.3.1 Build 2
+Depositly 1.3.1 Build 3
+
+- Added custom bank ordering through the Bank order column in Bank Information CSV. Numbered banks appear first in the icon row and both Cards/Grid layouts; unnumbered banks follow alphabetically. Accounts from one bank share a rank, and conflicting or invalid ranks are rejected before import.
+- Importing or merging the edited bank CSV saves the custom order without changing unrelated records. The order survives restarts and full backups, synchronizes with the website, and remains unchanged by deposit-only or older bank CSV imports. Clearing all ranks resets alphabetical order.
 
 - Added a bank icon filter row above Cards and Grid in Bank Information. Only banks with saved accounts appear; selecting an icon shows that bank's accounts in either layout, and All banks clears the selection.
 - Bank filtering stays selected across navigation and layout changes without changing saved records or backups. It resets when switching accounts or reopening the app, and clears when the selected bank has no remaining accounts. The icon row scrolls horizontally on narrow screens and keeps bank logos readable in both themes.
@@ -8,7 +11,7 @@ Depositly 1.3.1 Build 2
 - Bank balances survive local saves, CSV backups and Google sync with the website. Balance edits retain account details, deposit links and receipt history. Bank balances do not accrue forecast interest or change automatically when a payment is recorded.
 - Bank Information CSV now includes balance and currency fields while still reading older files. Currency checks protect retained deposits and bank balances during merges and separate-category replacements.
 
-- Rebuilt the signed APK from the current native Android source, bundled interface, styles and resources. Updated the app version and APK filename to 1.3.1 Build 2.
+- Rebuilt the signed APK from the current native Android source, bundled interface, styles and resources. Updated the app version and APK filename to 1.3.1 Build 3.
 
 - Removed the Savings Certificate bank-icon background tint in light and dark modes. Bank logo tiles now match FDRs.
 

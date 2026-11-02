@@ -1,6 +1,6 @@
 # Depositly
 
-Personal FDR and National Savings Certificate tracker by **Greenstone Solutions LLC**. Current application version: **1.3.1 Build 2**.
+Personal FDR and National Savings Certificate tracker by **Greenstone Solutions LLC**. Current application version: **1.3.1 Build 3**.
 
 Connect Google in **Settings → Account & backup** to synchronize saved edits automatically with the website and other devices using the same account. Dated versions remain available for explicit restore in **Backup versions**. See [Google Cloud setup and backup behavior](docs/google-drive.md) before testing sign-in.
 
@@ -9,6 +9,10 @@ Open the **Bank** bottom tab to save bank accounts, edit their details, or share
 Bank accounts are grouped by institution, with prominent account numbers, holder names, optional account-type labels and bank logos. Choose **Cards** or **Grid**; the app remembers the selected bank layout. Tap the copy icon beside an account or routing number to copy its exact value, including in the edit form. Both layouts offer sharing, while Grid's options button opens editing and deletion. A previously selected Compact view opens as Cards.
 
 The bank icon row above **Cards** and **Grid** includes only banks with saved accounts. Tap a bank icon to show only its accounts in either layout, or **All banks** to clear the filter. The selection stays while changing layouts or navigating, resets when switching accounts or reopening the app, and clears if the selected bank no longer has saved accounts.
+
+To arrange banks, export **Bank Information (CSV)** and edit **Bank order**. Number banks from 1 to 500; lower numbers appear first in the icon row and Cards/Grid groups. Use the same number for every account from one bank, or leave its other account rows blank. Different banks need different numbers. Unnumbered banks follow in alphabetical order. Import and merge to update the order while retaining current account details on conflicts; replacement applies the order too.
+
+Custom bank order stays saved across restarts and syncs with the updated website. Bank Information CSV and full JSON/Google backups preserve it. Deposit-only imports and older bank CSV files without the column keep the current order. A Bank order column with every cell blank resets banks to alphabetical order.
 
 Bank accounts have a manually maintained **Current balance**, entered when adding or editing an account or through its **Update** action. Home includes these amounts in your current balance and shows **Fixed deposits**, **Savings certificates** and **Bank** across the existing horizontal breakdown. The card's padding, main balance, investment button and footer remain unchanged. Existing accounts contribute zero until a balance is entered. Recording a deposit payment does not automatically credit a bank balance, and interest forecasts continue to use deposits only. Bank Information CSV and Google backups preserve balances; sharing account details does not include them.
 
@@ -70,7 +74,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
 ```
 
-The signed result is `dist/Depositly-1.3.1-build-2.apk`. Local signing files belong at `private/signing/depositly.p12` and `private/signing/password.txt`. A fresh clone can run `scripts/build.ps1 -Unsigned` without them.
+The signed result is `dist/Depositly-1.3.1-build-3.apk`. Local signing files belong at `private/signing/depositly.p12` and `private/signing/password.txt`. A fresh clone can run `scripts/build.ps1 -Unsigned` without them.
 
 See [GitHub signing and release setup](docs/github.md) and [development notes](docs/development.md).
 
