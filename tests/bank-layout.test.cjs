@@ -4,7 +4,7 @@ const equal=(a,b,message)=>assert.deepEqual(JSON.parse(JSON.stringify(a)),b,mess
 const asset={id:'deposit',type:'FDR',name:'Savings',ownership:'self',ownerName:'Me',principal:100000,rate:10,tds:10,cycle:1,cycleUnit:'months',start:'2026-01-01',first:'2026-02-01',maturity:'2027-01-01'};
 const bankIconKeys=screen=>(screen.match(/<button\b[^>]*>/g)||[]).filter(button=>button.includes('setBankInformationBank(')).map(button=>button.match(/data-bank="([^"]*)"/)?.[1]).filter(Boolean).map(key=>key.replace(/&quot;/g,'"').replace(/&amp;/g,'&'));
 const bankGroupKeys=screen=>[...screen.matchAll(/data-bank-group="([^"]*)"/g)].map(([,key])=>key.replace(/&quot;/g,'"').replace(/&amp;/g,'&'));
-function numberedBankCSV(T,banks,ranks={}){return T.csv([[...T.BANK_COLUMNS,'Bank order'],...banks.map(bank=>[bank.id,bank.bankId,bank.bankName,bank.accountTitle,bank.accountNumber,bank.branchName,bank.routingNumber,bank.accountType,bank.balance===undefined?'':bank.balance/100,'grid',banks.length,'BDT',2,ranks[bank.id]??''])]);}
+function numberedBankCSV(T,banks,ranks={}){return T.csv([[...T.BANK_COLUMNS,'Bank order'],...banks.map(bank=>[bank.id,bank.bankId,bank.bankName,bank.accountTitle,bank.accountNumber,bank.branchName,bank.routingNumber,bank.accountType,bank.note??'',bank.balance===undefined?'':bank.balance/100,'grid',banks.length,'BDT',2,ranks[bank.id]??''])]);}
 function app(initial={version:2,assets:[],paid:{},dark:false,currency:'BDT'}){
  const html=fs.readFileSync(source,'utf8'),nodes=new Map(),copied=[],browserCopied=[],fallbackCopied=[];
  let saved=JSON.stringify(initial),saveOK=true,selectedNode=null,vaultOwner='account',saveCalls=0;

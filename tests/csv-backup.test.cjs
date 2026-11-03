@@ -22,6 +22,16 @@ assert(!depositCSV.includes('Field path'));assert(!bankCSV.includes('Field path'
 assert(bankCSV.includes("\"'00123456789\""));assert(bankCSV.includes("\"'000123456\""));assert(bankCSV.includes('"\'=Private Holder"'),'CSV neutralizes spreadsheet formulas');
 equal(deposits.assets,source.assets,'Readable deposit rows restore all terms, leading-zero certificate references and extra columns');equal(deposits.paid,source.paid,'Multiple receipt rows restore amounts, dates, notes and historical receiving accounts');equal(deposits.bankAccounts,[]);equal(deposits.notificationSettings,reminders);
 equal(banks.bankAccounts,source.bankAccounts);equal(banks.assets,[]);equal(banks.paid,{});assert.equal(banks.bankInformationView,'grid');
+assert(!bankCSV.split('\r\n')[0].includes('"Note"'),'No-note exports retain the legacy column set');
+for(const note of ['First line\nSecond line, "quoted"','=Private note\nSecond line',"'Literal apostrophe",'a'.repeat(500)]){
+ const noted={...source,bankAccounts:[{...account,note}]},text=T.bankAccountsCSV(noted);
+ assert(text.split('\r\n')[0].includes('"Note"'));equal(T.readBankAccountsCSV(text).bankAccounts,noted.bankAccounts);
+ assert.equal(T.csvKind(text),'banks');
+ assert(!T.depositsCSV(noted,reminders).includes(note),'Bank notes stay outside deposit-only CSVs');
+}
+const blankNoteCSV=T.csv([[...T.BANK_COLUMNS],[account.id,account.bankId,account.bankName,account.accountTitle,account.accountNumber,account.branchName,account.routingNumber,account.accountType,'','', 'card',1,'BDT',2]]);
+equal(T.readBankAccountsCSV(blankNoteCSV).bankAccounts,[account],'An explicitly empty Note column remains optional');
+assert.throws(()=>T.readBankAccountsCSV(blankNoteCSV.replace('"Savings",""','"Savings","'+'a'.repeat(501)+'"')),/bank account/);
 equal(T.readDepositsCSV(depositCSV.replace(/\r\n/g,'\n')).assets.map(a=>a.reference),source.assets.map(a=>a.reference));equal(T.readBankAccountsCSV(bankCSV.replace(/\r\n/g,'\n')).bankAccounts,source.bankAccounts);
 for(const data of [{...source,assets:[],paid:{}},{version:2,assets:[],paid:{},bankAccounts:[],dark:false}]){assert.equal(T.readDepositsCSV(T.depositsCSV(data)).assets.length,0);equal(T.readBankAccountsCSV(T.bankAccountsCSV(data)).bankAccounts,data.bankAccounts);}
 const many={...source,assets:Array.from({length:500},(_,i)=>({...asset,id:'deposit'+i,notes:'plain'})),paid:{}};assert.equal(T.readDepositsCSV(T.depositsCSV(many)).assets.length,500);
@@ -89,7 +99,7 @@ for(const notation of ['1.23457E+16','1E+12','-1e+3','+.5e12','.5e12','1.e12']){
  const orderBanks=[{...account,accountType:"'=literal",balance:12345},{...account,id:'legacy-order',bankName:'AB BANK LIMITED',accountTitle:"'Leading apostrophe",accountType:"'=literal",balance:12345},{...account,id:'city-order',bankId:'city-bank-plc',bankName:'City Bank PLC',accountTitle:'City holder',balance:0},{...account,id:'custom-order',bankId:undefined,bankName:'Custom, "Bank"',accountTitle:'Custom holder',balance:0}];
  delete orderBanks[1].bankId;
  const rankedState={...source,bankAccounts:orderBanks},ordered=app(rankedState),order=['bank:city-bank-plc','bank:ab-bank-plc'];
- const csvFor=ranks=>T.csv([[...T.BANK_COLUMNS,'Bank order'],...orderBanks.map((bank,index)=>[bank.id,bank.bankId,bank.bankName,bank.accountTitle,bank.accountNumber,bank.branchName,bank.routingNumber,bank.accountType,bank.balance/100,'grid',orderBanks.length,'USD',2,ranks[index]??''])]);
+ const csvFor=ranks=>T.csv([[...T.BANK_COLUMNS,'Bank order'],...orderBanks.map((bank,index)=>[bank.id,bank.bankId,bank.bankName,bank.accountTitle,bank.accountNumber,bank.branchName,bank.routingNumber,bank.accountType,bank.note??'',bank.balance/100,'grid',orderBanks.length,'USD',2,ranks[index]??''])]);
  const readNative=text=>{ordered.context.orderText=text;return ordered.run('readBankInformationCSV(orderText)');};
  const valid=csvFor([2,'',1,'']),parsed=readNative(valid);equal(parsed.bankInformationOrder,order);equal(parsed.bankAccounts,T.migrate(rankedState).bankAccounts,'Rank parsing preserves leading zeros, quotation and formula-escaped text exactly once');
  ordered.context.orderText=valid;ordered.run("restoreData(orderText);applyImport('replace');exportBankInformation()");const exported=ordered.exports.at(-1)[0];assert.match(exported,/"Bank order"/);equal(readNative(exported).bankInformationOrder,order,'App export keeps numbered bank order');

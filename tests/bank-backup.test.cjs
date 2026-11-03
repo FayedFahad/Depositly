@@ -15,6 +15,10 @@ assert.notEqual(state.bankAccounts[0],account,'Migration does not alias account 
 assert(T.validBankAccount({...account,bankId:undefined,accountType:undefined}));
 assert(T.validBankAccount({...account,bankId:'',accountType:''}));
 assert(T.validBankAccount({...account,accountNumber:'AB-001 234'}),'Account identifiers remain text');
+for(const note of [undefined,'','  ','First line\nSecond line\twith details','a'.repeat(500)])assert(T.validBankAccount({...account,note}),'Notes allow optional bounded multiline text');
+for(const note of [null,123,[],{},'a'.repeat(501)]){
+ assert(!T.validBankAccount({...account,note}));assert.throws(()=>T.migrate({...old,bankAccounts:[{...account,note}]}),/bank account/);
+}
 for(const key of ['bankName','accountTitle','accountNumber','branchName','routingNumber']){
  for(const value of ['', '   ', undefined, 123, null])assert(!T.validBankAccount({...account,[key]:value}),`${key} rejects ${value}`);
 }
@@ -31,6 +35,8 @@ const full=T.exportData(state),selected=T.exportData(state,[]);
 equal(full.bankAccounts,[account]);
 assert(!Object.hasOwn(selected,'bankAccounts'),'Selecting deposits never exports private bank information');
 equal(T.migrate(JSON.parse(JSON.stringify(full))).bankAccounts,[account]);
+const noted={...state,bankAccounts:[{...account,note:'Private bank note\nSecond line with <details> & "quotes"'}]};
+equal(T.migrate(JSON.parse(JSON.stringify(T.exportData(noted)))).bankAccounts,noted.bankAccounts);
 assert(!T.instrumentCSV(state).includes('00123456789'),'Instrument CSV never includes bank accounts');
 const second={...account,id:'bank2',bankName:'Another bank',accountNumber:'0098765'};
 const changed={...account,accountTitle:'Edited remotely'};
@@ -39,6 +45,11 @@ assert.equal(merged.bankAdded,1);assert.equal(merged.bankConflicts,1);assert.equ
 equal(merged.state.bankAccounts,[account,second]);
 const duplicate=T.merge(state,state);
 assert.equal(duplicate.bankAdded,0);assert.equal(duplicate.bankDuplicates,1);assert.equal(duplicate.bankConflicts,0);
+for(const note of [undefined,'','Incoming note']){
+ const result=T.merge(noted,T.migrate({...old,bankAccounts:[{...account,note}]}));
+ assert.equal(result.bankConflicts,1);assert.equal(result.bankDuplicates,0);equal(result.state.bankAccounts,noted.bankAccounts);
+}
+assert.equal(T.merge(state,T.migrate({...old,bankAccounts:[{...account,note:''}]})).bankDuplicates,1,'Omitted and blank notes are equivalent');
 equal(T.merge(state,T.migrate(old)).state.bankAccounts,[account]);
 assert.throws(()=>T.merge(T.migrate({...old,bankAccounts:Array.from({length:500},(_,i)=>({...account,id:'limit'+i}))}),T.migrate({...old,bankAccounts:[account]})),/500-bank-account/);
 const backup=data=>({format:'depositly-google-drive',version:1,data:T.exportData(data),notificationSettings:{enabled:false,time:'09:00'}});
@@ -47,6 +58,8 @@ equal(S.backup(registry).data.bankAccounts,[account]);
 const edited={...state,bankAccounts:[{...account,branchName:'New branch'}]};
 const next=S.change(registry,backup(state),backup(edited),'phone',2);
 equal(S.backup(next).data.bankAccounts,edited.bankAccounts);
+const noteRevision=S.change(next,backup(edited),backup(noted),'phone',3);
+equal(S.backup(S.merge(registry,next,noteRevision)).data.bankAccounts,noted.bankAccounts);
 const cleared=S.change(next,backup(edited),backup({...state,bankAccounts:[]}),'phone',3);
 equal(S.backup(S.merge(registry,next,cleared)).data.bankAccounts,[]);
 console.log('PASS: bank account validation, leading zeros, legacy migration, full/selected export privacy, merge conflicts/limits, and registry backup/edit/delete round trips.');

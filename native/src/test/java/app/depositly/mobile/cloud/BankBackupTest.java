@@ -34,6 +34,17 @@ public class BankBackupTest {
             JSONObject missing=account();missing.remove(field);rejected(backup(new JSONArray().put(missing)));
         }
     }
+    @Test public void bankNotesAreOptionalBoundedMultilineText()throws Exception {
+        for(String note:new String[]{"","  ","First line\nSecond line\twith details",new String(new char[500]).replace('\0','a')}){
+            JSONObject value=backup(new JSONArray().put(account().put("note",note)));
+            DriveRepository.validate(value.toString());
+            JSONObject restored=SyncRegistry.backup(SyncRegistry.create(value,"phone",1));
+            assertEquals(note,restored.getJSONObject("data").getJSONArray("bankAccounts").getJSONObject(0).getString("note"));
+        }
+        for(Object note:new Object[]{123,JSONObject.NULL,new JSONObject(),new JSONArray(),new String(new char[501]).replace('\0','a')})
+            rejected(backup(new JSONArray().put(account().put("note",note))));
+        DriveRepository.validate(backup(new JSONArray().put(account())).toString());
+    }
     @Test public void multilineAndControlCharactersAreRejected()throws Exception {
         for(String field:new String[]{"bankId","bankName","accountTitle","accountNumber","branchName","routingNumber","accountType"}){
             for(char control:new char[]{'\n','\r','\t',0,0x7f,0x85,0x2028,0x2029})
@@ -50,9 +61,10 @@ public class BankBackupTest {
         JSONObject restored=SyncRegistry.backup(initial);DriveRepository.validate(restored.toString());
         assertTrue(SyncRegistry.equal(original.getJSONObject("data").getJSONArray("bankAccounts"),restored.getJSONObject("data").getJSONArray("bankAccounts")));
         assertEquals("00123456789",restored.getJSONObject("data").getJSONArray("bankAccounts").getJSONObject(0).getString("accountNumber"));
-        JSONObject edited=backup(new JSONArray().put(account().put("branchName","New branch")));
+        JSONObject edited=backup(new JSONArray().put(account().put("branchName","New branch").put("note","Private note\nSecond line")));
         JSONObject changed=SyncRegistry.change(initial,original,edited,"phone",2),changedBackup=SyncRegistry.backup(changed);
         assertEquals("New branch",changedBackup.getJSONObject("data").getJSONArray("bankAccounts").getJSONObject(0).getString("branchName"));
+        assertEquals("Private note\nSecond line",changedBackup.getJSONObject("data").getJSONArray("bankAccounts").getJSONObject(0).getString("note"));
         assertEquals("000123456",changedBackup.getJSONObject("data").getJSONArray("bankAccounts").getJSONObject(0).getString("routingNumber"));
         JSONObject deleted=SyncRegistry.change(changed,changedBackup,backup(new JSONArray()),"phone",3);
         JSONObject finalBackup=SyncRegistry.backup(SyncRegistry.merge(initial,changed,deleted));

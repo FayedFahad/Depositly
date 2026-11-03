@@ -46,5 +46,30 @@ function app(initial={version:2,assets:[],paid:{},dark:false,currency:'BDT'}){
  const restored={...account,id:'restored-bank',accountTitle:'Restored Holder',accountType:'Current'};
  a.context.restoredBank=restored;a.run("restoreData(JSON.stringify(Transfer.exportData({...state,bankAccounts:[restoredBank]})));applyImport('replace')");equal(a.saved.bankAccounts,[restored],'Full JSON replacement restores the backed-up bank list');assert.match(a.get('toast').textContent,/Entries replaced/);
  a.run("go('BankInformation')");a.setConfirm(false);a.run('deleteBankAccount(state.bankAccounts[0].id)');equal(a.saved.bankAccounts,[restored],'Delete cancellation keeps the record');a.setConfirm(true);a.setSaveOK(false);a.run('deleteBankAccount(state.bankAccounts[0].id)');equal(a.saved.bankAccounts,[restored],'Delete save failure keeps the record');a.setSaveOK(true);a.run('deleteBankAccount(state.bankAccounts[0].id)');equal(a.saved.bankAccounts,[]);assert.match(a.get('main').innerHTML,/Your bank details belong here/);
- console.log('PASS: bank menu and cards, required dropdown/form fields, create/edit/delete, save failures, optional type, leading zeros, exact native share text, back navigation, CSV/selected preservation, full JSON restore and cloud inclusion.');
+ const note='Quarterly statement\nContact <branch> & ask for "service".',noted={...account,note},notes=app({version:2,assets:[],paid:{},bankAccounts:[noted],dark:false,currency:'BDT'});
+ notes.run("go('BankInformation')");
+ for(const view of ['card','grid']){
+  notes.run(`setBankInformationView('${view}')`);const cards=notes.get('main').innerHTML;
+  assert.doesNotMatch(cards,/Quarterly statement|bank-account-note/,'Notes stay out of both card layouts');
+  assert.match(cards,/<button type="button" class="bank-account-title"[^>]*aria-haspopup="dialog"/,'Account titles open details from the keyboard');
+  const onClick=cards.match(/<article class="card bank-account-card" onclick="([^"]+)"/)[1];
+  notes.context.event={target:{closest:()=>({})}};notes.run(onClick);assert(!notes.get('modal').open,'Nested copy, balance and action buttons do not also open details');
+  notes.context.event={target:{closest:()=>null}};notes.run(onClick);
+  assert(notes.get('modal').open);assert.match(notes.get('modal').innerHTML,/<h3>Note<\/h3><p>Quarterly statement\nContact &lt;branch&gt; &amp; ask for &quot;service&quot;\.<\/p>/);
+  notes.run('closeModal()');
+ }
+ assert.equal(notes.run('bankAccountText(state.bankAccounts[0])'),expected,'Sharing excludes personal notes');
+ notes.run('bankAccountForm(state.bankAccounts[0].id)');let noteForm=notes.get('modal').innerHTML;
+ const noteInput=noteForm.match(/<textarea\b[^>]*name="note"[^>]*>/)[0];assert.match(noteInput,/maxlength="500"/);assert(!/\brequired\b/.test(noteInput));
+ assert.match(noteForm,/<label for="accountNote">Note \(optional\)<\/label>/);
+ assert.match(noteForm,/Quarterly statement\nContact &lt;branch&gt;/,'Editing prefills the saved note safely');
+ notes.submit({...values,note:'x'.repeat(501)});assert.equal(notes.saved.bankAccounts[0].note,note);assert(notes.get('modal').open);assert.match(notes.get('bankAccountError').textContent,/500/);
+ notes.setSaveOK(false);notes.submit({...values,note:'Unsaved note'});assert.equal(notes.saved.bankAccounts[0].note,note);assert(notes.get('modal').open);notes.setSaveOK(true);
+ notes.submit({...values,note:'  Updated note\nSecond line  '});assert.equal(notes.saved.bankAccounts[0].note,'Updated note\nSecond line');
+ equal(app(notes.saved).run('state.bankAccounts'),notes.saved.bankAccounts,'Notes survive a Vault reload');
+ equal(notes.queued.at(-1).backup.data.bankAccounts,notes.saved.bankAccounts,'Notes reach the queued Drive backup');
+ notes.run('bankAccountForm(state.bankAccounts[0].id)');notes.submit({...values,note:'</textarea><script>unsafe()</script>'});notes.run('bankAccountForm(state.bankAccounts[0].id)');
+ assert.match(notes.get('modal').innerHTML,/&lt;\/textarea&gt;&lt;script&gt;unsafe\(\)&lt;\/script&gt;/);assert.doesNotMatch(notes.get('modal').innerHTML,/<script>unsafe/);
+ notes.submit({...values,note:'   '});assert.equal(notes.saved.bankAccounts[0].note,'');notes.run('bankAccountDetail(state.bankAccounts[0].id)');assert.doesNotMatch(notes.get('modal').innerHTML,/bank-account-note/,'Cleared notes leave no empty section');
+ console.log('PASS: bank menu and cards, required and optional fields, private multiline notes, card/detail activation, editing/clearing/validation/escaping, create/edit/delete, save failures, leading zeros, exact share text, back navigation, imports and cloud inclusion.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

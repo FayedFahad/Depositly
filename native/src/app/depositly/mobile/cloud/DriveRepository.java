@@ -40,6 +40,11 @@ public final class DriveRepository {
         double number=((Number)value).doubleValue();
         return Double.isFinite(number)&&number>=0&&number<=1e13&&number==Math.floor(number);
     }
+    private static boolean validBankNote(JSONObject account) {
+        if(!account.has("note"))return true;
+        Object value=account.opt("note");
+        return value instanceof String&&((String)value).length()<=500;
+    }
     private static void validateBankAccountLink(JSONObject value,boolean receiptSnapshot)throws Exception {
         if(value.has("bankAccountId")){Object id=value.opt("bankAccountId");if(!(id instanceof String)||!((String)id).matches("[A-Za-z0-9_-]{1,100}"))throw new IOException("Invalid linked bank account ID.");}
         if(receiptSnapshot&&value.has("bankAccountSnapshot")){
@@ -64,7 +69,7 @@ public final class DriveRepository {
             if(accounts.length()>500)throw new IOException("Too many bank accounts.");
             for(int i=0;i<accounts.length();i++){
                 JSONObject account=accounts.getJSONObject(i);Object id=account.opt("id");
-                if(!(id instanceof String)||!((String)id).matches("[A-Za-z0-9_-]{1,100}")||!bankIds.add((String)id)||!bankText(account,"bankId",100,true)||!bankText(account,"bankName",150,false)||!bankText(account,"accountTitle",120,false)||!bankText(account,"accountNumber",100,false)||!bankText(account,"branchName",150,false)||!bankText(account,"routingNumber",100,false)||!bankText(account,"accountType",100,true)||!validBankBalance(account))throw new IOException("Invalid bank account details.");
+                if(!(id instanceof String)||!((String)id).matches("[A-Za-z0-9_-]{1,100}")||!bankIds.add((String)id)||!bankText(account,"bankId",100,true)||!bankText(account,"bankName",150,false)||!bankText(account,"accountTitle",120,false)||!bankText(account,"accountNumber",100,false)||!bankText(account,"branchName",150,false)||!bankText(account,"routingNumber",100,false)||!bankText(account,"accountType",100,true)||!validBankNote(account)||!validBankBalance(account))throw new IOException("Invalid bank account details.");
             }
         }
         if(backup.has("sync"))SyncRegistry.validate(backup.getJSONObject("sync"));

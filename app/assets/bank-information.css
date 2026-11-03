@@ -30,6 +30,12 @@ body[data-page="BankInformation"] .bank-account-card{padding:17px;border-radius:
 body[data-page="BankInformation"] .bank-account-top{align-items:flex-start;gap:8px;margin:0 0 15px}
 .bank-account-holder{flex:1;min-width:0}
 .bank-account-holder h4{font-size:16px;line-height:1.4;font-weight:750;letter-spacing:-.2px;overflow-wrap:anywhere;margin:0}
+.bank-account-card{cursor:pointer}
+.bank-account-holder .bank-account-title{display:block;width:100%;min-height:44px;padding:0;border:0;background:transparent;color:inherit;font:inherit;text-align:start;overflow-wrap:anywhere}
+.bank-account-title:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.bank-account-note{margin-top:22px}
+.bank-account-note h3{margin:0 0 8px;font-size:14px}
+.bank-account-note p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
 .bank-account-type{display:inline-block;max-width:100%;margin-top:6px;padding:3px 7px;border-radius:5px;background:var(--soft);color:var(--brand);font-size:11px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
 body[data-page="BankInformation"] .bank-account-card .bank-account-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 14px;border:0;padding:0;margin:0}
 body[data-page="BankInformation"] .bank-account-card .bank-account-details>div{min-width:0;padding:0;border:0}

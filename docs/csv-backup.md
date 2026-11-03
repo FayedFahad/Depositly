@@ -17,7 +17,9 @@ The file also includes Currency, Number format, Dark mode, Deposit view, Reminde
 
 ## Bank Information
 
-The columns are Bank account ID, Bank ID, Bank name, Account title, Account number, Branch name, Routing number, Account type, Current balance, Bank view, Bank account count, Currency, CSV backup version and Bank order. There is one row per saved account. Account numbers, routing numbers and certificate references remain text, including leading zeros. Current balance uses currency units with up to two decimal places; zero is valid. Accounts without a saved balance contribute zero to Home.
+The columns are Bank account ID, Bank ID, Bank name, Account title, Account number, Branch name, Routing number, Account type, optional Note, Current balance, Bank view, Bank account count, Currency, CSV backup version and Bank order. There is one row per saved account. Account numbers, routing numbers and certificate references remain text, including leading zeros. Current balance uses currency units with up to two decimal places; zero is valid. Accounts without a saved balance contribute zero to Home.
+
+The Note column is included when at least one account has a note. It preserves up to 500 characters, including line breaks, and is supported by the updated app and website. Files without the column remain readable. Earlier phone versions cannot import a Note column; Google backups retain notes across those versions.
 
 Older Bank Information CSV files without balance or currency columns remain readable. A file containing balances, including explicit zero balances, must include Currency. Older app versions reject the new bank CSV headers instead of silently discarding balances. Google and legacy JSON backups preserve the optional balance field.
 
