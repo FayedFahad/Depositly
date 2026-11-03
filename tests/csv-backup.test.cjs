@@ -11,11 +11,15 @@ const returned={amount:10000000,date:'2026-04-13',notes:'Principal received',sna
 const reminders={enabled:true,time:'07:45'};
 const source=T.migrate({version:2,assets:[asset,{...asset,id:'nsc',type:'NSC',interestType:'simple',bankAccountId:undefined,ownership:'others',ownerName:'Other person'}],paid:{'deposit:2026-04-11':receipt,'deposit:principal':returned},bankAccounts:[account,{...account,id:'unlinked',accountNumber:'000555'}],dark:true,currency:'USD',numberFormat:'international',defaultDepositView:'grid',bankInformationView:'grid'});
 const depositCSV=T.depositsCSV(source,reminders),bankCSV=T.bankAccountsCSV(source),deposits=T.readDepositsCSV(depositCSV),banks=T.readBankAccountsCSV(bankCSV);
+assert(bankCSV.includes(',"3"'));assert(depositCSV.includes(',"3"'));
+const legacyBankCSV=bankCSV.replace(/,"3"(?=\r\n|$)/g,',"2"').replace(/"'(\d+)"/g,'"$1"');
+equal(T.readBankAccountsCSV(legacyBankCSV).bankAccounts,source.bankAccounts,'Unprefixed version 2 bank identifiers remain readable');
+assert.throws(()=>T.readBankAccountsCSV(bankCSV.replace(/,"3"(?=\r\n|$)/g,',"4"')),/newer version/,'Unknown CSV versions fail before import');
 assert.equal(T.csvKind(depositCSV),'deposits');assert.equal(T.csvKind(bankCSV),'banks');assert.equal(T.csvKind(T.instrumentCSV(source)),'csv');
 for(const h of ['Deposit ID','Investment name','Principal','Annual interest rate %','TDS %','Opening date','Maturity date','Receipt ID','Received amount','Receipt receiving account number'])assert(depositCSV.split('\r\n')[0].includes('"'+h+'"'),h);
 for(const h of ['Bank account ID','Bank name','Account title','Account number','Branch name','Routing number','Account type'])assert(bankCSV.split('\r\n')[0].includes('"'+h+'"'),h);
 assert(!depositCSV.includes('Field path'));assert(!bankCSV.includes('Field path'));assert(!depositCSV.includes(account.accountNumber),'Current bank account details stay in the separate bank CSV');assert(!bankCSV.includes(asset.name),'Bank CSV has no deposits or receipts');
-assert(bankCSV.includes('"00123456789"'));assert(bankCSV.includes('"000123456"'));assert(bankCSV.includes('"\'=Private Holder"'),'CSV neutralizes spreadsheet formulas');
+assert(bankCSV.includes("\"'00123456789\""));assert(bankCSV.includes("\"'000123456\""));assert(bankCSV.includes('"\'=Private Holder"'),'CSV neutralizes spreadsheet formulas');
 equal(deposits.assets,source.assets,'Readable deposit rows restore all terms, leading-zero certificate references and extra columns');equal(deposits.paid,source.paid,'Multiple receipt rows restore amounts, dates, notes and historical receiving accounts');equal(deposits.bankAccounts,[]);equal(deposits.notificationSettings,reminders);
 equal(banks.bankAccounts,source.bankAccounts);equal(banks.assets,[]);equal(banks.paid,{});assert.equal(banks.bankInformationView,'grid');
 equal(T.readDepositsCSV(depositCSV.replace(/\r\n/g,'\n')).assets.map(a=>a.reference),source.assets.map(a=>a.reference));equal(T.readBankAccountsCSV(bankCSV.replace(/\r\n/g,'\n')).bankAccounts,source.bankAccounts);
@@ -23,7 +27,7 @@ for(const data of [{...source,assets:[],paid:{}},{version:2,assets:[],paid:{},ba
 const many={...source,assets:Array.from({length:500},(_,i)=>({...asset,id:'deposit'+i,notes:'plain'})),paid:{}};assert.equal(T.readDepositsCSV(T.depositsCSV(many)).assets.length,500);
 const clean=T.depositsCSV({...source,assets:source.assets.map(a=>({...a,notes:'plain'}))},reminders),lines=clean.split('\r\n'),bankLines=bankCSV.split('\r\n');
 for(const damaged of [lines.slice(0,-1).join('\r\n'),clean+'\r\n'+lines[1],clean.replace('"Received amount"','"Wrong column"'),clean.replace('"2562.5"','"not money"')])assert.throws(()=>T.readDepositsCSV(damaged),'Malformed or incomplete deposit CSV is rejected');
-for(const damaged of [bankLines.slice(0,-1).join('\r\n'),bankCSV+'\r\n'+bankLines[1],bankCSV.replace('"Routing number"','"Wrong column"'),bankCSV.replace('"Bank account ID"','"Bank name"'),bankCSV.replace(/,"2"(?=\r\n|$)/g,',"99"'),bankCSV.replace('"00123456789"','""')])assert.throws(()=>T.readBankAccountsCSV(damaged),'Malformed, future-version or incomplete bank CSV is rejected');
+for(const damaged of [bankLines.slice(0,-1).join('\r\n'),bankCSV+'\r\n'+bankLines[1],bankCSV.replace('"Routing number"','"Wrong column"'),bankCSV.replace('"Bank account ID"','"Bank name"'),bankCSV.replace(/,"3"(?=\r\n|$)/g,',"99"'),bankCSV.replace("\"'00123456789\"",'""')])assert.throws(()=>T.readBankAccountsCSV(damaged),'Malformed, future-version or incomplete bank CSV is rejected');
 assert.throws(()=>T.readDepositsCSV(T.depositsCSV(source,{enabled:true,time:'25:00'})),/settings/);
 function app(initial){
  const nodes=new Map(),get=id=>{if(!nodes.has(id))nodes.set(id,{innerHTML:'',textContent:'',value:'',style:{},dataset:{},open:false,setAttribute(){},insertAdjacentHTML(_,s){this.innerHTML+=s;},showModal(){this.open=true;},close(){this.open=false;}});return nodes.get(id);};
@@ -55,6 +59,31 @@ b.context.bad=bankLines.slice(0,-1).join('\r\n');b.run("restoreData(bad);applyIm
 // Build 16 combined CSVs stay readable, but are no longer offered for export.
 const legacyRows=[T.BACKUP_COLUMNS];function legacy(value,path=''){const type=value===null?'null':Array.isArray(value)?'array':typeof value,entries=['object','array'].includes(type)?Object.entries(value).filter(([,v])=>v!==undefined):[];legacyRows.push([1,path,type,['object','array'].includes(type)?entries.length:type==='null'?'':value]);for(const [k,v] of entries)legacy(v,path+'/'+k.replace(/~/g,'~0').replace(/\//g,'~1'));}legacy(T.exportData(source));const combined=T.csv(legacyRows);assert.equal(T.csvKind(combined),'backup-csv');equal(T.readBackupCSV(combined).bankAccounts,source.bankAccounts);
 assert(!html.includes("format==='json'"));assert(!html.includes('function backupCSV('));
+// Spreadsheet text protection must retain zeros and all digits without changing money.
+for(const identifier of ['00012345678901234567890','98765432109876543210','0',"'00123","''00123",'AB-001 23','=SUM(A1)']){
+ const values={...source,assets:[{...asset,reference:identifier}],bankAccounts:[{...account,id:'123',accountNumber:identifier,routingNumber:identifier,balance:12345}],paid:{'deposit:2026-04-11':{...receipt,snapshot:{...receipt.snapshot,bankAccountSnapshot:{...receipt.snapshot.bankAccountSnapshot,accountNumber:identifier}}}},bankInformationOrder:['bank:ab-bank-plc']};
+ const bankText=T.bankAccountsCSV(values),depositText=T.depositsCSV(values,reminders),importedBank=T.readBankAccountsCSV(bankText),importedDeposit=T.readDepositsCSV(depositText);
+ assert.equal(importedBank.bankAccounts[0].accountNumber,identifier);assert.equal(importedBank.bankAccounts[0].routingNumber,identifier);assert.equal(importedDeposit.assets[0].reference,identifier);assert.equal(importedDeposit.paid['deposit:2026-04-11'].snapshot.bankAccountSnapshot.accountNumber,identifier);
+ assert.equal(T.readInstrumentCSV(T.instrumentCSV(values)).assets[0].reference,identifier,'Legacy CSV uses the same text protection');
+ assert(bankText.includes('"123.45"'),'Balances remain currency values without a text marker');
+ if(/^\d+$/.test(identifier)){assert(bankText.includes('"\''+identifier+'"'));assert(depositText.includes('"\''+identifier+'"'));}
+ const ordered=app(values);ordered.run('exportBankInformation()');ordered.context.protectedBankCSV=ordered.exports[0][0];
+ equal(ordered.run('readBankInformationCSV(protectedBankCSV).bankInformationOrder'),['bank:ab-bank-plc'],'Protected numeric Bank account ID keeps its rank');
+ assert.equal(ordered.run('readBankInformationCSV(protectedBankCSV).bankAccounts[0].accountNumber'),identifier,'Bank order wrapper decodes protection once');
+}
+const rejected=app(source),beforeReject=plain(rejected.saved),rejectWrites=rejected.queued.length;
+for(const notation of ['1.23457E+16','1E+12','-1e+3','+.5e12','.5e12','1.e12']){
+ const badBank=bankCSV.replace('"\'00123456789"','"'+notation+'"');
+ assert.throws(()=>T.readBankAccountsCSV(badBank),/Account number is in scientific notation/);
+ assert.throws(()=>T.readBankAccountsCSV(bankCSV.replace('"\'000123456"','"'+notation+'"')),/Routing number is in scientific notation/);
+ assert.throws(()=>T.readDepositsCSV(depositCSV.replace('"\'000123"','"'+notation+'"')),/certificate number is in scientific notation/);
+ assert.throws(()=>T.readDepositsCSV(depositCSV.replace('"\'0009876"','"'+notation+'"')),/Receipt receiving account number is in scientific notation/);
+ assert.throws(()=>T.readInstrumentCSV(T.instrumentCSV(source).replace('"\'000123"','"'+notation+'"')),/Certificate reference is in scientific notation/);
+ assert.throws(()=>T.bankAccountsCSV({...source,bankAccounts:[{...account,accountNumber:notation}]}),/Account number is in scientific notation/,'Do not re-export already shortened account identifiers');
+ assert.throws(()=>T.depositsCSV({...source,assets:[{...asset,reference:notation}],paid:{}}),/scientific notation/);
+ rejected.context.damagedBankCSV=badBank;rejected.run("restoreData(damagedBankCSV);applyImport('replace')");equal(rejected.saved,beforeReject,'Scientific notation rejection keeps the existing bank data');assert.equal(rejected.queued.length,rejectWrites,'Rejected files never enqueue a sync');assert.match(rejected.get('toast').textContent,/original full digits/);
+}
+
 // Bank order is an optional extension around the unchanged shared Bank CSV format.
 (async()=>{
  const orderBanks=[{...account,accountType:"'=literal",balance:12345},{...account,id:'legacy-order',bankName:'AB BANK LIMITED',accountTitle:"'Leading apostrophe",accountType:"'=literal",balance:12345},{...account,id:'city-order',bankId:'city-bank-plc',bankName:'City Bank PLC',accountTitle:'City holder',balance:0},{...account,id:'custom-order',bankId:undefined,bankName:'Custom, "Bank"',accountTitle:'Custom holder',balance:0}];

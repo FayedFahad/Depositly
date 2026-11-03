@@ -1,4 +1,8 @@
-Depositly 1.3.1 Build 4
+Depositly 1.3.1 Build 5
+
+- Protected numeric text in CSV exports so account numbers, routing numbers, certificate references and historical receiving-account numbers keep leading zeros and all digits. The importer removes only the protective text marker; money and bank-order ranks remain numeric.
+- CSV imports and exports reject identifier values written in scientific notation with guidance to recover the original digits from a bank record or unedited backup. Invalid files leave current records unchanged.
+- New named CSV exports use version 3 so older readers reject protected identifiers rather than importing the marker. Updated readers continue to accept version 2 files. Numeric-only bank IDs retain custom bank order, and phone/website CSVs remain compatible.
 
 - Optimized Home, Payments, Calendar and deposit details to query payment schedules by date and visible rows, preserving exact counts, amounts and historical receipts. Long deposit schedules show 50 entries at a time with Show more.
 - Payout reminders prepare their complete future plan in cancellable batches so startup and saved edits can remain responsive. Renewing reminders continue beyond the next year.
@@ -15,7 +19,7 @@ Depositly 1.3.1 Build 4
 - Bank balances survive local saves, CSV backups and Google sync with the website. Balance edits retain account details, deposit links and receipt history. Bank balances do not accrue forecast interest or change automatically when a payment is recorded.
 - Bank Information CSV now includes balance and currency fields while still reading older files. Currency checks protect retained deposits and bank balances during merges and separate-category replacements.
 
-- Rebuilt the signed APK from the current native Android source, bundled interface, styles and resources. Updated the app version and APK filename to 1.3.1 Build 4.
+- Rebuilt the signed APK from the current native Android source, bundled interface, styles and resources. Updated the app version and APK filename to 1.3.1 Build 5.
 
 - Removed the Savings Certificate bank-icon background tint in light and dark modes. Bank logo tiles now match FDRs.
 

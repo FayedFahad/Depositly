@@ -37,8 +37,16 @@ Choose **Choose CSV file**, review the counts, then merge or replace. Import eac
 
 Empty exports contain a settings-only row with zero totals, so they can clear their own category without affecting the other. Cancelled imports, invalid files and failed local writes keep current records. Android notification permission and generated schedules are device-managed; credentials are excluded.
 
-The reader checks required and duplicate headers, row lengths, CSV version 2, consistent preferences, record totals, duplicate receipt IDs, repeated deposit consistency, bank/deposit limits and all existing financial/history rules. It rejects incomplete files before any import action. Export files respect the Android reader's 20 MB UTF-8 limit.
+The reader checks required and duplicate headers, row lengths, CSV versions 2 and 3, consistent preferences, record totals, duplicate receipt IDs, repeated deposit consistency, bank/deposit limits and all existing financial/history rules. It rejects incomplete files before any import action. Export files respect the Android reader's 20 MB UTF-8 limit.
 
 Older investment-only CSV files preserve saved banks and display preferences when replacing deposits. Build 16 combined CSV and legacy JSON data remain readable for migration. Google sync retains its internal protocol.
 
-Keep both original exports for restores. Spreadsheet applications may change identifier strings or values when saving an edited copy.
+## Preserve identifiers in spreadsheets
+
+New exports use CSV backup version 3. Numeric text such as account numbers, routing numbers and deposit/certificate references receives a leading apostrophe as a text marker. The updated app and website remove exactly one protection marker during import, retaining every original digit. Existing literal apostrophes remain intact. Balances, amounts, rates and bank-order ranks stay numeric.
+
+Use updated clients to restore these files. Earlier readers reject version 3 instead of importing the protective marker as part of an account number. The updated readers also accept older version 2 CSVs, including unprefixed identifiers.
+
+Scientific notation in identifier fields (for example, `1.23457E+16`) is rejected during CSV import and export with instructions to recover the original full digits. Expanding that value cannot recover omitted digits or leading zeros; the app never guesses account lengths or pads with zeros. Rejection keeps current records unchanged. Account numbers already shortened in an older import can still be edited in Bank Information or replaced using a corrected CSV.
+
+Keep both original exports for restores. If a spreadsheet editor offers automatic number conversion, import identifier columns as Text and do not remove the text marker. A changed or rounded identifier cannot always be detected once saved as ordinary digits.

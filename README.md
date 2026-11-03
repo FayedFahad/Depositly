@@ -1,10 +1,10 @@
 # Depositly
 
-Personal FDR and National Savings Certificate tracker by **Greenstone Solutions LLC**. Current application version: **1.3.1 Build 4**.
+Personal FDR and National Savings Certificate tracker by **Greenstone Solutions LLC**. Current application version: **1.3.1 Build 5**.
 
 Connect Google in **Settings → Account & backup** to synchronize saved edits automatically with the website and other devices using the same account. Dated versions remain available for explicit restore in **Backup versions**. See [Google Cloud setup and backup behavior](docs/google-drive.md) before testing sign-in.
 
-Open the **Bank** bottom tab to save bank accounts, edit their details, or share an account as text on the Bank Information page. The hamburger menu also keeps this shortcut. Account and routing numbers retain leading zeros. Separate Deposits and Bank Information CSV files together include every saved account, deposit and receipt. Each file has named field headers and restores its own records. Google backups also include both categories. Local backup downloads use CSV only. Press Back twice within two seconds on Home to exit the Android app.
+Open the **Bank** bottom tab to save bank accounts, edit their details, or share an account as text on the Bank Information page. The hamburger menu also keeps this shortcut. Account and routing numbers retain leading zeros. New CSV exports protect numeric identifiers as text, including long account numbers and certificate references. Updated readers reject scientific notation with recovery guidance instead of saving shortened numbers. Separate Deposits and Bank Information CSV files together include every saved account, deposit and receipt. Each file has named field headers and restores its own records. Google backups also include both categories. Local backup downloads use CSV only. Press Back twice within two seconds on Home to exit the Android app.
 
 Bank accounts are grouped by institution, with prominent account numbers, holder names, optional account-type labels and bank logos. Choose **Cards** or **Grid**; the app remembers the selected bank layout. Tap the copy icon beside an account or routing number to copy its exact value, including in the edit form. Both layouts offer sharing, while Grid's options button opens editing and deletion. A previously selected Compact view opens as Cards.
 
@@ -76,7 +76,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
 ```
 
-The signed result is `dist/Depositly-1.3.1-build-4.apk`. Local signing files belong at `private/signing/depositly.p12` and `private/signing/password.txt`. A fresh clone can run `scripts/build.ps1 -Unsigned` without them.
+The signed result is `dist/Depositly-1.3.1-build-5.apk`. Local signing files belong at `private/signing/depositly.p12` and `private/signing/password.txt`. A fresh clone can run `scripts/build.ps1 -Unsigned` without them.
 
 See [GitHub signing and release setup](docs/github.md) and [development notes](docs/development.md).
 
