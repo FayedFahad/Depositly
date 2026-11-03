@@ -7,13 +7,16 @@ class FixedDate extends Date{constructor(...args){super(...(args.length?args:[20
 const a={id:'self',type:'FDR',name:'A deposit',ownerName:'Me',ownership:'self',principal:20000000,rate:11.77,tds:10,cycle:1,cycleUnit:'months',start:'2026-09-13',first:'2026-10-13',maturity:'2026-12-13'};
 let stored=JSON.stringify({version:2,assets:[a,{...a,id:'other',name:'Other owner',ownership:'others',ownerName:'Family'}],paid:{},dark:false,currency:'BDT',numberFormat:'south-asian'});
 let plan=[],uploads=0,tests=0,exported=null,status={available:true,enabled:false,permissionGranted:true,time:'09:00',nextDate:''};
-const ctx={console,Date:FixedDate,Math,JSON,Number,String,Set,Array,Object,Error,Blob,URL,setTimeout:()=>0,confirm:()=>true,scrollTo(){},document:{getElementById:get,querySelector:get,body:{dataset:{},classList:{toggle(){}}}},localStorage:{getItem:()=>stored,setItem:(k,v)=>stored=v},Vault:{load:()=>stored,save:s=>{stored=s;return true},exportFile:(data,name,mime)=>exported={data,name,mime},restore(){}},Reminders:{
+const pending=[];let timer=0;
+function flush(){let turns=0;while(pending.length){assert(++turns<100000,'Reminder work eventually completes');pending.shift()();}}
+const ctx={console,Date:FixedDate,Math,JSON,Number,String,Set,Array,Object,Error,Blob,URL,setTimeout:(callback,delay=0)=>{if(!delay)pending.push(callback);return ++timer},confirm:()=>true,scrollTo(){},document:{getElementById:get,querySelector:get,body:{dataset:{},classList:{toggle(){}}}},localStorage:{getItem:()=>stored,setItem:(k,v)=>stored=v},Vault:{load:()=>stored,save:s=>{stored=s;return true},exportFile:(data,name,mime)=>exported={data,name,mime},restore(){}},Reminders:{
  getStatus:()=>JSON.stringify(status),setPlan:s=>{plan=JSON.parse(s);uploads++;status.nextDate=plan[0]?.date||'';return true},setEnabled:on=>{status.enabled=on},setTime:time=>{if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))return false;status.time=time;return true},testNotification:()=>tests++,openSystemSettings(){}
 }};
 ctx.window=ctx;vm.createContext(ctx);
 const html=fs.readFileSync(path.join(__dirname,'../app/assets/index.html'),'utf8');
 for(const m of html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g))vm.runInContext(m[1],ctx);
-const run=s=>vm.runInContext(s,ctx),screen=()=>get('main').innerHTML;
+assert.equal(uploads,0,'Reminder generation yields until after startup scripts finish');flush();
+const run=s=>{const result=vm.runInContext(s,ctx);flush();return result;},screen=()=>get('main').innerHTML;
 assert.equal(plan[0].date,'2026-10-13');assert.equal(plan[0].total,'৳1,766');
 assert(plan.every(p=>!p.details.includes('Other owner')),'Others are excluded from reminders');
 assert.equal(plan.find(p=>p.date==='2026-12-13').count,2,'Maturity combines interest and principal');

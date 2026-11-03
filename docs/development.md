@@ -2,6 +2,8 @@
 
 The canonical interface and financial/interchange engine is `app/assets/index.html`. Bank logos and the currency font are embedded for offline use. The wrapper retains the original `vault` SharedPreferences name and `data` key, so signed app updates preserve existing records.
 
+See [UI performance](performance.md) for indexed payment queries, receipt-cache invalidation, bounded schedule pages and background document transfers.
+
 The active Android build is `native/build.gradle`, using Gradle 8.11.1, Android Gradle Plugin 8.9.2, Java 17, compile/target SDK 34, build-tools 35.0.0, and minimum Android 26. `scripts/gradle.ps1` downloads Gradle from its official distribution and verifies the pinned SHA-256 in `tools/gradle-source.json`. Runtime dependencies are pinned in `native/gradle.lockfile`; update them deliberately with `-WriteLocks`. Google Play services authorization is version 22.0.0. Gradle packages native resources, dependency manifests and DEX files. `app/apktool.yml` supplies version information; the build does not use Apktool or decompiled smali.
 
 Edit the wrapper in `native/src/app/depositly/mobile/MainActivity.java`, Google authorization and Drive transport in `native/src/app/depositly/mobile/cloud/`, and payout reminders in `native/src/app/depositly/mobile/reminders/`. The wrapper prevents remote navigation and subresource requests; native bridges are exposed only to the packaged interface. Google authorization uses Google's native account/consent UI.

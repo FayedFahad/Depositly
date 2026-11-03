@@ -1,4 +1,8 @@
-Depositly 1.3.1 Build 3
+Depositly 1.3.1 Build 4
+
+- Optimized Home, Payments, Calendar and deposit details to query payment schedules by date and visible rows, preserving exact counts, amounts and historical receipts. Long deposit schedules show 50 entries at a time with Show more.
+- Payout reminders prepare their complete future plan in cancellable batches so startup and saved edits can remain responsive. Renewing reminders continue beyond the next year.
+- Moved local backup preparation and document-provider reads/writes off Android's UI thread. Transfers retain the initiating account, discard stale results and show progress feedback; import review and the existing import size limit remain in place.
 
 - Added custom bank ordering through the Bank order column in Bank Information CSV. Numbered banks appear first in the icon row and both Cards/Grid layouts; unnumbered banks follow alphabetically. Accounts from one bank share a rank, and conflicting or invalid ranks are rejected before import.
 - Importing or merging the edited bank CSV saves the custom order without changing unrelated records. The order survives restarts and full backups, synchronizes with the website, and remains unchanged by deposit-only or older bank CSV imports. Clearing all ranks resets alphabetical order.
@@ -11,7 +15,7 @@ Depositly 1.3.1 Build 3
 - Bank balances survive local saves, CSV backups and Google sync with the website. Balance edits retain account details, deposit links and receipt history. Bank balances do not accrue forecast interest or change automatically when a payment is recorded.
 - Bank Information CSV now includes balance and currency fields while still reading older files. Currency checks protect retained deposits and bank balances during merges and separate-category replacements.
 
-- Rebuilt the signed APK from the current native Android source, bundled interface, styles and resources. Updated the app version and APK filename to 1.3.1 Build 3.
+- Rebuilt the signed APK from the current native Android source, bundled interface, styles and resources. Updated the app version and APK filename to 1.3.1 Build 4.
 
 - Removed the Savings Certificate bank-icon background tint in light and dark modes. Bank logo tiles now match FDRs.
 

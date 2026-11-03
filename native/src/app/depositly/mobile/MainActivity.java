@@ -4,11 +4,14 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CancellationSignal;
+import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.webkit.*;
 import android.widget.Toast;
@@ -25,6 +28,9 @@ public class MainActivity extends Activity {
     private DriveBackupBridge cloud;
     private boolean pageReady;
     private String pendingImport;
+    private String pendingImportOwner;
+    private final DocumentTransfer documents = new DocumentTransfer(command -> runOnUiThread(command));
+    private DocumentRequest documentRequest;
     private boolean backCheckPending;
     private long backRequestGeneration;
     private long queuedBackAt = -1;
@@ -32,6 +38,21 @@ public class MainActivity extends Activity {
     private Toast exitToast;
     private static final long EXIT_BACK_WINDOW_MS = 2000;
     private static final int EXPORT = 10, IMPORT = 11;
+
+    private static final class DocumentRequest {
+        final int type;
+        final String owner;
+        final CancellationSignal cancellation = new CancellationSignal();
+        volatile boolean canceled;
+        volatile File file;
+        DocumentRequest(int type, String owner) { this.type = type; this.owner = owner; }
+        void clear() {
+            canceled = true;
+            cancellation.cancel();
+            File temporary = file;
+            if (temporary != null) temporary.delete();
+        }
+    }
 
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
@@ -94,22 +115,42 @@ public class MainActivity extends Activity {
             getWindow().setNavigationBarContrastEnforced(false);
         }
     }
-    private File exportCache() { return new File(getCacheDir(), "pending-export.txt"); }
     public static String read(InputStream in) throws IOException {
-        if (in == null) throw new IOException("No file selected");
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        byte[] buffer = new byte[8192];
-        for (int n; (n = in.read(buffer)) != -1;) {
-            if (out.size() + n > 20000000) throw new IOException("Backup is too large");
-            out.write(buffer, 0, n);
-        }
-        return out.toString("UTF-8");
+        return DocumentTransfer.read(in, () -> false);
     }
-    private void message(String value) { runOnUiThread(() -> web.evaluateJavascript("toast(" + JSONObject.quote(value) + ")", null)); }
+    private boolean live() { return !isFinishing() && !isDestroyed(); }
+    private void message(String value) { runOnUiThread(() -> {
+        if (live()) web.evaluateJavascript("toast(" + JSONObject.quote(value) + ")", null);
+    }); }
     private void deliverImport() {
         if (!pageReady || pendingImport == null) return;
-        web.evaluateJavascript("restoreData(" + JSONObject.quote(pendingImport) + ")", null);
+        String owner = pendingImportOwner, imported = pendingImport;
         pendingImport = null;
+        pendingImportOwner = null;
+        if (!live()) return;
+        if (!owner.equals(RegistryStorage.owner(this))) { accountChanged(); return; }
+        // Account changes may reach JavaScript after this callback was queued. Check both views.
+        web.evaluateJavascript("if(typeof activeVaultSub!=='undefined'&&activeVaultSub===" + JSONObject.quote(owner)
+            + "&&Vault.owner()===" + JSONObject.quote(owner) + "){restoreData(" + JSONObject.quote(imported)
+            + ")}else{toast('Your account changed. Choose the backup again in the correct account.');}", null);
+    }
+    private void accountChanged() { message("Your account changed. Choose the backup again in the correct account."); }
+    private DocumentRequest beginDocument(int type, String owner) {
+        if (!live()) return null;
+        if (owner == null || !owner.equals(RegistryStorage.owner(this))) { accountChanged(); return null; }
+        if (documentRequest != null) { message("Finish the current file selection or transfer first."); return null; }
+        documentRequest = new DocumentRequest(type, owner);
+        return documentRequest;
+    }
+    private boolean currentDocument(DocumentRequest request) {
+        return live() && documentRequest == request && !request.canceled;
+    }
+    private void finishDocument(DocumentRequest request) {
+        if (documentRequest == request) documentRequest = null;
+        request.clear();
+    }
+    private void requireDocumentOwner(DocumentRequest request) throws IOException {
+        if (request.canceled || !request.owner.equals(RegistryStorage.owner(this))) throw new IOException("The account changed");
     }
     public class Store {
         @JavascriptInterface public String load() { return RegistryStorage.load(MainActivity.this); }
@@ -140,37 +181,106 @@ public class MainActivity extends Activity {
                 } catch (RuntimeException e) { message("Could not open sharing. Please try again."); }
             });
         }
-        @JavascriptInterface public void exportFile(String data, String name, String mime) {
-            try (OutputStream out = new FileOutputStream(exportCache())) { out.write(data.getBytes(StandardCharsets.UTF_8)); }
-            catch (IOException e) { message("Could not prepare export. Please try again."); return; }
-            runOnUiThread(() -> startActivityForResult(new Intent(Intent.ACTION_CREATE_DOCUMENT)
-                .addCategory(Intent.CATEGORY_OPENABLE).setType(mime).putExtra(Intent.EXTRA_TITLE, name), EXPORT));
+        @JavascriptInterface public void exportFile(String data, String name, String mime, String owner) {
+            runOnUiThread(() -> {
+                DocumentRequest request = beginDocument(EXPORT, owner);
+                if (request == null) return;
+                message("Preparing export…");
+                documents.execute(() -> {
+                    try {
+                        requireDocumentOwner(request);
+                        request.file = File.createTempFile("depositly-export-", ".csv", getCacheDir());
+                        try (InputStream in = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
+                             OutputStream out = new FileOutputStream(request.file)) {
+                            DocumentTransfer.copy(in, out, () -> request.canceled);
+                        }
+                        requireDocumentOwner(request);
+                        return request.file;
+                    } catch (Exception e) {
+                        File temporary = request.file;
+                        if (temporary != null) temporary.delete();
+                        throw e;
+                    }
+                }, (file, error) -> {
+                    if (!currentDocument(request)) { finishDocument(request); return; }
+                    if (!owner.equals(RegistryStorage.owner(MainActivity.this))) {
+                        finishDocument(request); accountChanged(); return;
+                    }
+                    if (error != null) {
+                        finishDocument(request); message("Could not prepare export. Please try again."); return;
+                    }
+                    try {
+                        startActivityForResult(new Intent(Intent.ACTION_CREATE_DOCUMENT)
+                            .addCategory(Intent.CATEGORY_OPENABLE).setType(mime).putExtra(Intent.EXTRA_TITLE, name), EXPORT);
+                    } catch (RuntimeException e) {
+                        finishDocument(request); message("Could not open the file picker. Please try again.");
+                    }
+                });
+            });
         }
-        @JavascriptInterface public void restore() {
-            runOnUiThread(() -> startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT)
-                .addCategory(Intent.CATEGORY_OPENABLE).setType("*/*")
-                .putExtra(Intent.EXTRA_TITLE, "Choose CSV backup"), IMPORT));
+        @JavascriptInterface public void restore(String owner) {
+            runOnUiThread(() -> {
+                DocumentRequest request = beginDocument(IMPORT, owner);
+                if (request == null) return;
+                try {
+                    startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT)
+                        .addCategory(Intent.CATEGORY_OPENABLE).setType("*/*")
+                        .putExtra(Intent.EXTRA_TITLE, "Choose CSV backup"), IMPORT);
+                } catch (RuntimeException e) {
+                    finishDocument(request); message("Could not open the file picker. Please try again.");
+                }
+            });
         }
     }
     @Override protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data);
         if (cloud.activityResult(request, result, data)) return;
-        if (result != RESULT_OK || data == null || data.getData() == null) return;
-        Uri uri = data.getData();
-        try {
-            if (request == EXPORT) {
-                try (InputStream in = new FileInputStream(exportCache()); OutputStream out = getContentResolver().openOutputStream(uri)) {
-                    if (out == null) throw new IOException("No output stream");
-                    byte[] buffer = new byte[8192];
-                    for (int n; (n = in.read(buffer)) != -1;) out.write(buffer, 0, n);
+        if (request != EXPORT && request != IMPORT) return;
+        final DocumentRequest transfer = documentRequest;
+        if (transfer == null || transfer.type != request) {
+            if (result == RESULT_OK) message("The file selection expired. Please choose the file again.");
+            return;
+        }
+        if (result != RESULT_OK || data == null || data.getData() == null) { finishDocument(transfer); return; }
+        if (!transfer.owner.equals(RegistryStorage.owner(this))) { finishDocument(transfer); accountChanged(); return; }
+        final Uri uri = data.getData();
+        final ContentResolver resolver = getContentResolver();
+        message(request == EXPORT ? "Saving backup…" : "Reading backup…");
+        documents.execute(() -> {
+            try {
+                requireDocumentOwner(transfer);
+                if (request == EXPORT) {
+                    try (InputStream in = new FileInputStream(transfer.file);
+                         ParcelFileDescriptor descriptor = resolver.openFileDescriptor(uri, "w", transfer.cancellation)) {
+                        if (descriptor == null) throw new IOException("No output stream");
+                        try (OutputStream out = new ParcelFileDescriptor.AutoCloseOutputStream(descriptor)) {
+                            DocumentTransfer.copy(in, out, () -> transfer.canceled);
+                        }
+                    }
+                    requireDocumentOwner(transfer);
+                    return (String) null;
                 }
-                exportCache().delete();
-                message("Export saved");
-            } else if (request == IMPORT) {
-                try (InputStream in = getContentResolver().openInputStream(uri)) { pendingImport = read(in); }
-                deliverImport();
+                try (android.content.res.AssetFileDescriptor descriptor = resolver.openAssetFileDescriptor(uri, "r", transfer.cancellation)) {
+                    if (descriptor == null) throw new IOException("No input stream");
+                    try (InputStream in = descriptor.createInputStream()) {
+                        String imported = DocumentTransfer.read(in, () -> transfer.canceled);
+                        requireDocumentOwner(transfer);
+                        return imported;
+                    }
+                }
+            } finally {
+                File temporary = transfer.file;
+                if (temporary != null) temporary.delete();
             }
-        } catch (Exception e) { message("Could not read or save the file. Please try again."); }
+        }, (imported, error) -> {
+            if (!currentDocument(transfer)) { finishDocument(transfer); return; }
+            boolean sameOwner = transfer.owner.equals(RegistryStorage.owner(this));
+            finishDocument(transfer);
+            if (!sameOwner) { accountChanged(); return; }
+            if (error != null) { message("Could not read or save the file. Please try again."); return; }
+            if (request == EXPORT) message("Export saved");
+            else { pendingImport = imported; pendingImportOwner = transfer.owner; deliverImport(); }
+        });
     }
     @Override public void onBackPressed() {
         if (isFinishing() || isDestroyed()) return;
@@ -230,6 +340,9 @@ public class MainActivity extends Activity {
     }
     @Override protected void onSaveInstanceState(Bundle state) { super.onSaveInstanceState(state); cloud.saveInstanceState(state); }
     @Override protected void onDestroy() {
+        if (documentRequest != null) { documentRequest.clear(); documentRequest = null; }
+        documents.close();
+        pendingImport = pendingImportOwner = null;
         if (cloud != null) cloud.destroy();
         if (web != null) { web.removeJavascriptInterface("DriveBackup"); web.destroy(); }
         super.onDestroy();
