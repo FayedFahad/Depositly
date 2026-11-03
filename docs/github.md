@@ -1,8 +1,14 @@
 # GitHub releases
 
-The `Build and publish APK` workflow publishes the signed APK under **Releases → latest → Assets** after a successful push to `main`. It also publishes `build-info.json` containing the source commit, Android version code, APK hash and signing certificate fingerprint. Old APK names are removed from this rolling release when the visible version changes. Other releases are not modified.
+The `Build and publish APK` workflow publishes the signed APK under **Releases → latest → Assets** after a successful push to `main`. It also publishes `build-info.json` containing the source commit, Android version code, APK hash and signing certificate fingerprint, and `update.json` for the app and website.
 
-The repository should be private unless its owner decides to publish the source. Enable GitHub Actions in repository settings if necessary.
+Public APK delivery uses the public `FayedFahad/Depositly` repository. No GitHub credential is embedded in the app or website. Making this repository private would stop anonymous update checks and downloads; use a separately designed public distribution service before changing its visibility.
+
+Each update is first uploaded to a draft release named `v<version-slug>`, for example `v1.3.1-build-7`. The version tag is created at the built source commit, and an existing conflicting tag is rejected. Only after its APK and both metadata files upload successfully does the version release become public. Published version assets are never overwritten or cleaned up by the release script. The manifest points to that version-specific APK, so cached metadata and downloads in progress keep working across later releases.
+
+The rolling `latest` release remains a compatibility alias. Its new APK and build metadata upload before its update feed, and obsolete rolling APK names are removed only after publication succeeds. A failed build leaves the prior release available; a failed upload never removes older version releases. GitHub briefly replaces the rolling feed asset during an upload, so clients should retry a temporary unavailable response.
+
+The signed build checks the package, visible version, Android code, original signing certificate and SHA-256 checksum before generating `update.json`. The manifest includes the APK byte size, publication time and current release notes. Notes above `## Earlier updates` are included, with a 12000-character limit. Unsigned verification builds do not generate an update feed.
 
 ## Signing secrets
 

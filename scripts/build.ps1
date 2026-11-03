@@ -1,5 +1,6 @@
 param([switch]$Unsigned, [string]$SdkPath, [string]$KeystorePath, [string]$PasswordPath, [int]$VersionCodeOverride=0)
 . (Join-Path $PSScriptRoot 'common.ps1')
+. (Join-Path $PSScriptRoot 'release-manifest.ps1')
 $version = Get-AppVersion
 if ($VersionCodeOverride) {
     if ($VersionCodeOverride -lt $version.Code -or $VersionCodeOverride -gt 2100000000) { throw 'Invalid Android version code override.' }
@@ -50,5 +51,9 @@ if (!$badging[0].Contains("name='app.depositly.mobile' versionCode='$($version.C
 $info = [ordered]@{package='app.depositly.mobile';versionName=$version.Name;versionCode=$version.Code;commit=$env:GITHUB_SHA;apkSha256=(Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash.ToLowerInvariant();certificateSha256=if ($Unsigned) {$null} else {$certificate}}
 $infoName = if ($Unsigned) { 'build-info-unsigned.json' } else { 'build-info.json' }
 $info | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $releaseRoot $infoName) -Encoding UTF8
+if (!$Unsigned) {
+    $manifest = New-AppUpdateManifest $info $output 'FayedFahad/Depositly' (Get-AppUpdateNotes (Join-Path $ProjectRoot 'docs/release-notes.md'))
+    $manifest | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $releaseRoot 'update.json') -Encoding UTF8
+}
 Write-Host "Built and verified $output (Android version code $($version.Code))."
 

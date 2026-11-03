@@ -1,6 +1,6 @@
 # Depositly
 
-Personal FDR and National Savings Certificate tracker by **Greenstone Solutions LLC**. Current application version: **1.3.1 Build 6**.
+Personal FDR and National Savings Certificate tracker by **Greenstone Solutions LLC**. Current application version: **1.3.1 Build 7**.
 
 Connect Google in **Settings → Account & backup** to synchronize saved edits automatically with the website and other devices using the same account. Dated versions remain available for explicit restore in **Backup versions**. See [Google Cloud setup and backup behavior](docs/google-drive.md) before testing sign-in.
 
@@ -60,9 +60,17 @@ Local drafts, test fixtures, downloaded Gradle tools, build caches and intermedi
 
 ## Updating the app
 
-1. Edit the relevant files, commit, and push to `main`.
+On the phone, open **Settings → App updates**. Depositly checks for a newer version when you first open Settings. Choose **Download update**, then **Install update**. The first time, Android may ask you to allow installations from Depositly. Return to the app after enabling it, then confirm the Android installer. Installing over the existing app retains your records. Download progress, cancellation and retry are available in Settings; the download continues while you use other screens.
+
+The latest signed APK is also available at [Download Depositly for Android](https://depositly.vercel.app/download/). Older app versions need this one-time APK installation to gain the Settings updater.
+
+For future releases:
+
+1. Edit the app, bump its version, commit, and push to `main`.
 2. Wait for **Actions → Build and publish APK** to finish.
-3. Open **Releases → latest → Assets** and download the APK.
+3. The app's update check and website automatically use the new signed release. No website edit is needed for each app release.
+
+The updater verifies the APK's SHA-256 checksum, package, version and original signing certificate before opening Android's installer. Each update has a versioned APK URL so a newer release cannot replace a download already in progress. Updates require a connection; a failed check or download leaves the installed app and saved records available.
 
 Every app update must increase the visible **Build** number and Android's internal version code. Run `scripts/bump-version.ps1` before building an update; it updates the configuration, Settings labels, documentation and APK filename together. Signed builds and CI reject a visible version that is not newer than the previous available build metadata. If the published Android code is higher than the local one, pass its `build-info.json` with `-PreviousBuildInfoPath`. CI can increase the internal code further to keep published updates installable. Use an unsigned build when rebuilding unchanged source for verification.
 
@@ -78,7 +86,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
 ```
 
-The signed result is `dist/Depositly-1.3.1-build-6.apk`. Local signing files belong at `private/signing/depositly.p12` and `private/signing/password.txt`. A fresh clone can run `scripts/build.ps1 -Unsigned` without them.
+The signed result is `dist/Depositly-1.3.1-build-7.apk`. Local signing files belong at `private/signing/depositly.p12` and `private/signing/password.txt`. A fresh clone can run `scripts/build.ps1 -Unsigned` without them.
 
 See [GitHub signing and release setup](docs/github.md) and [development notes](docs/development.md).
 

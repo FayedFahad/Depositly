@@ -1,4 +1,11 @@
-Depositly 1.3.1 Build 6
+Depositly 1.3.1 Build 7
+
+- Added Settings → App updates to check for new releases, download with progress and cancellation, and open Android's installer. The first installation permission is handled through Android settings; existing app records are retained when updating.
+- Downloads verify their checksum, package, version and original signing certificate before installation. Pending verified downloads can be reopened from Settings.
+- Added a shared public release feed and versioned APK releases. Successful main-branch app releases appear automatically in the Settings updater and the website's Android download page.
+- Download the latest signed app from https://depositly.vercel.app/download/. Install this release once to enable future updates from inside the app.
+
+## Earlier updates
 
 - Added an optional Note field to bank accounts, with up to 500 characters and multiple lines. Notes remain hidden in Cards and Grid and appear only when an account is opened. Tap a card or its title to view account details.
 - Notes can be edited or cleared, and survive local saves, Google sync and Bank Information CSV transfers with the website. Existing accounts and CSVs need no note. Shared account text and payment receipt snapshots exclude notes.
@@ -22,7 +29,7 @@ Depositly 1.3.1 Build 6
 - Bank balances survive local saves, CSV backups and Google sync with the website. Balance edits retain account details, deposit links and receipt history. Bank balances do not accrue forecast interest or change automatically when a payment is recorded.
 - Bank Information CSV now includes balance and currency fields while still reading older files. Currency checks protect retained deposits and bank balances during merges and separate-category replacements.
 
-- Rebuilt the signed APK from the current native Android source, bundled interface, styles and resources. Updated the app version and APK filename to 1.3.1 Build 6.
+- Rebuilt the signed APK from the current native Android source, bundled interface, styles and resources. Updated the app version and APK filename to 1.3.1 Build 7.
 
 - Removed the Savings Certificate bank-icon background tint in light and dark modes. Bank logo tiles now match FDRs.
 

@@ -336,3 +336,12 @@ dialog .row>button[aria-label^=Close]:focus-visible{box-shadow:var(--ring)}
 .hero.current-balance .balance-breakdown b{display:block;font-size:clamp(6px,calc((100vw - 116px) / var(--balance-chars,10) * .5),18px);line-height:27.9px;white-space:nowrap;font-variant-numeric:tabular-nums}
 @supports(font-size:1cqi){.hero.current-balance .balance-breakdown .sub{font-size:clamp(8px,10.5cqi,12px)}.hero.current-balance .balance-breakdown b{font-size:clamp(6px,calc(160cqi / var(--balance-chars,10)),18px)}}
 .allocation-bar>span:nth-child(3),.allocation-legend>div:nth-child(3) i{background:var(--muted)}
+
+/* Update status stays in Settings while downloads continue off screen. */
+.app-update-content{padding:0 18px 18px}.app-update-content>.sub{margin:0 0 14px}.app-update-content button{min-height:48px}
+.app-update-content .app-update-check{margin-top:10px}
+.app-update-progress{display:grid;gap:6px;margin:0 0 14px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.app-update-progress progress{width:100%;height:8px;accent-color:var(--brand)}
+.app-update-notes{margin-top:16px;font-size:14px;overflow-wrap:anywhere}.app-update-notes summary{cursor:pointer;min-height:44px;padding:10px 0;color:var(--brand);font-weight:600}
+.app-update-notes summary:focus-visible{outline:3px solid var(--brand);outline-offset:2px;border-radius:4px}
+.app-update-notes p{white-space:pre-wrap;color:var(--muted);margin:4px 0 0}

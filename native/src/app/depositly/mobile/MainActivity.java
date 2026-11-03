@@ -18,6 +18,7 @@ import android.widget.Toast;
 import app.depositly.mobile.cloud.DriveBackupBridge;
 import app.depositly.mobile.cloud.RegistryStorage;
 import app.depositly.mobile.reminders.ReminderBridge;
+import app.depositly.mobile.updates.AppUpdateBridge;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import org.json.JSONObject;
@@ -26,6 +27,7 @@ import org.json.JSONObject;
 public class MainActivity extends Activity {
     private WebView web;
     private DriveBackupBridge cloud;
+    private AppUpdateBridge updates;
     private boolean pageReady;
     private String pendingImport;
     private String pendingImportOwner;
@@ -75,6 +77,7 @@ public class MainActivity extends Activity {
                 deliverImport();
                 ReminderBridge.pageReady(MainActivity.this, web);
                 cloud.pageReady();
+                updates.pageReady();
             }
         });
         web.setWebChromeClient(new WebChromeClient() {
@@ -87,9 +90,11 @@ public class MainActivity extends Activity {
             }
         });
         cloud = new DriveBackupBridge(this, web, saved);
+        updates = new AppUpdateBridge(this, web);
         web.addJavascriptInterface(new Store(), "Vault");
         web.addJavascriptInterface(new ReminderBridge(this, web), "Reminders");
         web.addJavascriptInterface(cloud, "DriveBackup");
+        web.addJavascriptInterface(updates, "AppUpdates");
         try {
             String document = AppDocument.load(name -> {
                 try (InputStream input = getAssets().open(name)) { return read(input); }
@@ -234,6 +239,7 @@ public class MainActivity extends Activity {
     }
     @Override protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data);
+        if (updates != null && updates.activityResult(request, result)) return;
         if (cloud.activityResult(request, result, data)) return;
         if (request != EXPORT && request != IMPORT) return;
         final DocumentRequest transfer = documentRequest;
@@ -321,6 +327,7 @@ public class MainActivity extends Activity {
         super.onResume();
         ReminderBridge.onResume(this, web);
         if (cloud != null) cloud.resume();
+        if (updates != null) updates.resume();
     }
     @Override protected void onPause() {
         ++backRequestGeneration;
@@ -344,6 +351,8 @@ public class MainActivity extends Activity {
         documents.close();
         pendingImport = pendingImportOwner = null;
         if (cloud != null) cloud.destroy();
+        if (updates != null) updates.destroy();
+        if (web != null) web.removeJavascriptInterface("AppUpdates");
         if (web != null) { web.removeJavascriptInterface("DriveBackup"); web.destroy(); }
         super.onDestroy();
     }

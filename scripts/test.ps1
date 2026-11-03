@@ -1,7 +1,10 @@
 . (Join-Path $PSScriptRoot 'common.ps1')
 & (Join-Path $ProjectRoot 'tests/ci-version.test.ps1')
 & (Join-Path $ProjectRoot 'tests/version-bump.test.ps1')
+& (Join-Path $ProjectRoot 'tests/release-feed.test.ps1')
 & node (Join-Path $ProjectRoot 'tests/csv-backup.test.cjs') | Out-Host
+Assert-ToolExit
+& node (Join-Path $ProjectRoot 'tests/app-updates.test.cjs') | Out-Host
 Assert-ToolExit
 foreach ($test in @('dates.test.cjs','reminders.test.cjs','reminder-slicing.test.cjs','renewal.test.cjs','payout-rules.test.cjs','interest-backup.test.cjs','payout-migration.test.cjs','investment-form.test.cjs','compound-display.test.cjs','forecast-charts.test.cjs','home-forecast.test.cjs','schedule-query.test.cjs','startup-branding.test.cjs','receipt-reconciliation.test.cjs','cloud.test.cjs','registry.test.cjs','deposit-view.test.cjs','bank-backup.test.cjs','bank-balance-data.test.cjs','bank-balance-ui.test.cjs','bank-information.test.cjs','bank-layout.test.cjs','deposit-account-data.test.cjs','deposit-account-registry.test.cjs','deposit-account-ui.test.cjs','payment-account-ui.test.cjs')) {
     & node (Join-Path $ProjectRoot "tests/$test") | Out-Host
